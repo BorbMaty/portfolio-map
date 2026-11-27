@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
-import { getCv, getProjects, isEmail, isUrl } from '../lib/content';
+import { cvPdfName, getCv, getProjects, isEmail, isUrl } from '../lib/content';
 
 import MapIsland, { type Landmark } from '../map/MapIsland';
 import { regions } from '../map/regions';
@@ -76,7 +76,7 @@ const cardWidths = [320, 660, 990, 1320];
     <ul class="contact" role="list">
       <li>{isEmail(cv.email) ? <a href={`mailto:${cv.email}`}>{cv.email}</a> : <span>Email: {cv.email}</span>}</li>
       {cv.links.map((l) => <li>{isUrl(l.href) ? <a href={l.href}>{l.label}</a> : <span>{l.label}: {l.href}</span>}</li>)}
-      <li><a class="button primary" href="/cv.pdf" download>Download CV (PDF)</a></li>
+      <li><a class="button primary" href="/cv.pdf" download={cvPdfName(cv.name)}>Download CV (PDF)</a></li>
     </ul>
   </section>
 </Base>

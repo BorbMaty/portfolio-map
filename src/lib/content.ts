@@ -12,6 +12,13 @@ export const isUrl = (href: string) => /^https?:\/\//.test(href);
 /** True when `email` looks like an address (so we never emit `mailto:TODO(Mara)`). */
 export const isEmail = (email: string) => /^[^\s@]+@[^\s@]+$/.test(email);
 
+/**
+ * Download filename for cv.pdf, e.g. "Mátyás-Levente Borbáth" -> "Matyas-Levente-Borbath-CV.pdf".
+ * Accents are stripped (NFD + removing combining marks) because some mail and download tools mangle non-ASCII names.
+ */
+export const cvPdfName = (name: string) =>
+  `${name.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().replace(/\s+/g, '-')}-CV.pdf`;
+
 /** The single CV entry from `src/content/cv.yaml`. Throws if the file is missing so the build fails loudly. */
 export async function getCv() {
   const entry = await getEntry('cv', 'cv');

@@ -118,6 +118,20 @@ test('every image has alt text; content images describe themselves', async ({ pa
   expect(await page.locator('.panel img').count()).toBeGreaterThan(0);
 });
 
+test('Download CV saves a real PDF with a name-based ASCII filename', async ({ page }) => {
+  for (const path of ['/', '/cv/']) {
+    await page.goto(path);
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('link', { name: 'Download CV (PDF)' }).click(),
+    ]);
+    // e.g. Matyas-Levente-Borbath-CV.pdf: accents stripped, never the bare "cv.pdf" or an error page saved as .htm.
+    expect(download.suggestedFilename(), path).toMatch(/^[A-Za-z0-9]+(-[A-Za-z0-9]+)*-CV\.pdf$/);
+    const head = readFileSync(await download.path()).subarray(0, 5).toString('latin1');
+    expect(head, `${path}: downloaded file is not a PDF`).toBe('%PDF-');
+  }
+});
+
 test('quest-log images are never upscaled from a too-small source', async ({ page }) => {
   // For srcset images Chrome reports naturalWidth as the slot width it derived from `sizes`; if that is smaller than
   // the rendered width, the chosen file is stretched (the blurry flagship cards fixed on 2026-11-28).
