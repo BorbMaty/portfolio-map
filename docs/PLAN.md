@@ -96,18 +96,18 @@ parchment; every landmark has an accessible name.
 
 A static site: no server, near-zero running cost, fast everywhere.
 
-| Layer | Choice | Why |
-|---|---|---|
-| Framework | Astro + TypeScript | Static HTML per page (good SEO, fast first paint); interactive map as one island |
-| Map | Blender-rendered terrain as deep-zoom raster tiles + HTML/SVG overlay for labels, landmarks and fog | Realistic look; tiles load only what's on screen; landmarks stay DOM elements (clickable, accessible) |
-| Pan / zoom | `OpenSeadragon` (or `Leaflet CRS.Simple`) | Built for deep-zoom tiles with HTML overlays; touch-aware |
-| Animation | GSAP (fly-to, scroll unroll, fog reveal) | Smooth, respects reduced motion with a flag |
-| Content | Markdown/MDX per project in Astro content collections | Edit text without touching code; same source feeds map panels, `/cv` and project URLs |
-| CV PDF | Generated from the same content at build time (Playwright print of `/cv`) | One source of truth, never out of date |
-| Styling | CSS variables + a little Tailwind or plain CSS | Two themes (parchment / night) |
-| Hosting | Cloudflare Pages (or GitHub Pages) | Free, global CDN, preview deploy per branch |
-| Video | YouTube unlisted embed behind a click-to-load poster | Free bandwidth; no player loads until clicked |
-| Analytics | Cloudflare Web Analytics | Free, no cookies, no consent banner |
+| Layer      | Choice                                                                                              | Why                                                                                                   |
+| ---------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Framework  | Astro + TypeScript                                                                                  | Static HTML per page (good SEO, fast first paint); interactive map as one island                      |
+| Map        | Blender-rendered terrain as deep-zoom raster tiles + HTML/SVG overlay for labels, landmarks and fog | Realistic look; tiles load only what's on screen; landmarks stay DOM elements (clickable, accessible) |
+| Pan / zoom | `OpenSeadragon` (or `Leaflet CRS.Simple`)                                                           | Built for deep-zoom tiles with HTML overlays; touch-aware                                             |
+| Animation  | GSAP (fly-to, scroll unroll, fog reveal)                                                            | Smooth, respects reduced motion with a flag                                                           |
+| Content    | Markdown/MDX per project in Astro content collections                                               | Edit text without touching code; same source feeds map panels, `/cv` and project URLs                 |
+| CV PDF     | Generated from the same content at build time (Playwright print of `/cv`)                           | One source of truth, never out of date                                                                |
+| Styling    | CSS variables + a little Tailwind or plain CSS                                                      | Two themes (parchment / night)                                                                        |
+| Hosting    | Cloudflare Pages (or GitHub Pages)                                                                  | Free, global CDN, preview deploy per branch                                                           |
+| Video      | YouTube unlisted embed behind a click-to-load poster                                                | Free bandwidth; no player loads until clicked                                                         |
+| Analytics  | Cloudflare Web Analytics                                                                            | Free, no cookies, no consent banner                                                                   |
 
 **Costs:** about €0/month to run, plus a domain (~€10–15/year for something like `mara<surname>.dev`). Avoid
 Firebase Hosting for video: the free tier's daily transfer limit is small, and self-hosted MP4s would hit it fast.
@@ -204,12 +204,9 @@ with the site build.
 Build in an order where every phase leaves something usable: after phase 1 the site already works as a
 plain portfolio, even with no map. *Ship a shareable CV first, then the map, then the polish.*
 
-| Phase | Name | Contents | Gate |
-|---|---|---|---|
-| 0 | Prep the repos | Finish tractor repo, gameplay video, tidy READMEs, write project texts, pick domain | — |
-| 1 | Content + CV | Astro + content, project pages, `/cv` page + PDF, per-project URLs, deploy to CF Pages | CV shareable |
-| 2 | The map | Terrain render (draft), pan / zoom + fly-to, scroll panels, mobile journey path, keyboard nav | Works on a phone |
-| 3 | Polish + launch | Final terrain render, fog of war, night theme, OG images + SEO, Lighthouse 90+ | Launch |
+**The detailed, gated phase list now lives in [`ROADMAP.md`](ROADMAP.md)** (split 2026-11-27 into small
+one-PR phases). Summary: 0 prep the repos · 1 content + CV (shareable) · 2 the map (works on a phone) ·
+3 polish + launch.
 
 Later: Warchief's Keep · digital twin in the Observatory · 3D diorama easter egg.
 
