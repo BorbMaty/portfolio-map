@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Astro build output and generated types
+dist/
+.astro/
+
+# Playwright and Lighthouse CI output
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+.lighthouseci/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs and OS noise
+*.log
+.DS_Store
+Thumbs.db
+
+# Blender backups and raw map sources (phase 2: tiles are generated, not versioned here)
+*.blend1
+tiles-src/
+
+# The plan PDF is the original export; docs/PLAN.md is the versioned copy
+docs/*.pdf
