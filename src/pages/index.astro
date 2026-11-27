@@ -12,7 +12,7 @@ const projects = await getProjects();
 // Only regions that lead somewhere get a landmark: published projects, or a fixed href (Capital, Harbor).
 const landmarks: Landmark[] = regions.flatMap((r) => {
   const project = projects.find((p) => p.data.slug === r.projectSlug);
-  if (project) return [{ ...r, label: project.data.title, href: `/projects/${project.data.slug}` }];
+  if (project) return [{ ...r, label: project.data.title, href: `/projects/${project.data.slug}/` }];
   if (r.href) return [{ ...r, label: r.id === 'capital' ? 'About' : 'Contact', href: r.href }];
   return [];
 });
@@ -25,7 +25,7 @@ const landmarks: Landmark[] = regions.flatMap((r) => {
     <p class="story">I build software that sees, simulates and monitors the physical world.</p>
     <p class="actions">
       <a class="button primary" href="#map">Explore the map</a>
-      <a class="button" href="/cv">View CV</a>
+      <a class="button" href="/cv/">View CV</a>
       <a class="button" href="#contact">Contact</a>
     </p>
   </section>
@@ -50,7 +50,7 @@ const landmarks: Landmark[] = regions.flatMap((r) => {
             )}
             <p class="region">{p.data.region}</p>
             <h3>
-              <a href={`/projects/${p.data.slug}`}>{p.data.title}</a>
+              <a href={`/projects/${p.data.slug}/`}>{p.data.title}</a>
             </h3>
             <p>{p.data.pitch}</p>
           </li>

@@ -13,10 +13,11 @@ const projects = readdirSync(projectDir)
     const src = readFileSync(new URL(f, projectDir), 'utf8');
     const slug = src.match(/^slug:\s*(\S+)/m)?.[1];
     if (!slug) throw new Error(`${f}: no slug in frontmatter`);
-    return { slug, draft: /^draft:\s*true\s*$/m.test(src) };
+    return { slug, draft: /^draft:\s*true\s*$/m.test(src), youtube: /^hero:\s*\n\s+kind:\s*youtube\b/m.test(src) };
   });
 const published = projects.filter((p) => !p.draft).map((p) => p.slug);
 const drafts = projects.filter((p) => p.draft).map((p) => p.slug);
+const videoProjects = projects.filter((p) => !p.draft && p.youtube).map((p) => p.slug);
 
 // Same fallback as astro.config.mjs: run the tests with the SITE_URL the build used.
 const site = process.env.SITE_URL || 'http://localhost:4321';
@@ -33,12 +34,31 @@ for (const path of ['/', '/cv/', '/about/', '/cv.pdf', ...published.map((s) => `
 }
 
 test('unknown route shows the 404 page', async ({ page }) => {
-  const res = await page.goto('/no-such-page');
+  // Slash-ending path: with trailingSlash 'always', astro preview answers slash-less URLs with its own bare
+  // 404 before reaching 404.html (Cloudflare Pages serves 404.html for any unknown path).
+  const res = await page.goto('/no-such-page/');
   expect(res?.status()).toBe(404);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Here be dragons');
   // Not a real page: crawlers must not index it, and it must not claim a canonical URL.
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
   await expect(page.locator('link[rel="canonical"], meta[property="og:url"]')).toHaveCount(0);
+});
+
+test('internal links resolve directly, without redirects', async ({ page, request }) => {
+  // Collect every same-site link from every page, then require a direct 200: a slash-less page link
+  // would cost a redirect per click on Cloudflare Pages.
+  const pages = ['/', '/cv/', '/about/', ...published.map((s) => `/projects/${s}/`)];
+  const links = new Set<string>();
+  for (const path of pages) {
+    await page.goto(path);
+    for (const href of await page.locator('a[href^="/"]').evaluateAll((as) => as.map((a) => a.getAttribute('href')!))) {
+      links.add(href.split('#')[0] || '/');
+    }
+  }
+  for (const href of links) {
+    const res = await request.get(href, { maxRedirects: 0 });
+    expect(res.status(), `link ${href}`).toBe(200);
+  }
 });
 
 test('/cv has exactly one h1', async ({ page }) => {
@@ -75,13 +95,18 @@ for (const slug of drafts) {
   });
 }
 
-test('YouTube iframe is absent until the poster is clicked', async ({ page }) => {
+test('YouTube heroes load no iframe until the poster is clicked', async ({ page }) => {
+  // Dormant until a project has a video hero (tractor-vr uses an image until its video is uploaded).
+  test.skip(videoProjects.length === 0, 'no published project has a YouTube hero yet');
   // Block YouTube itself so the test stays offline and fast; only the iframe insertion matters.
   await page.route(/youtube(-nocookie)?\.com/, (route) => route.abort());
-  await page.goto('/projects/tractor-vr/');
-  await expect(page.locator('iframe')).toHaveCount(0);
-  await page.locator('.video button').click();
-  await expect(page.locator('iframe[src*="youtube-nocookie.com/embed/"]')).toHaveCount(1);
+  for (const slug of videoProjects) {
+    await page.goto(`/projects/${slug}/`);
+    await expect(page.locator('iframe')).toHaveCount(0);
+    await expect(page.locator('.video .play')).toHaveAttribute('href', /^https:\/\/www\.youtube\.com\/watch\?v=/);
+    await page.locator('.video .play').click();
+    await expect(page.locator('iframe[src*="youtube-nocookie.com/embed/"]')).toHaveCount(1);
+  }
 });
 
 // The landing page size budget (< 300 KB) is asserted by Lighthouse CI (lighthouserc.json), which measures

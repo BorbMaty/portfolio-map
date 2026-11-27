@@ -1,7 +1,8 @@
 ---
 /**
- * Click-to-load YouTube player: shows a poster button and only inserts the iframe after a click,
+ * Click-to-load YouTube player: shows a poster link and only inserts the iframe after a click,
  * so no YouTube scripts or cookies load until the visitor asks for the video.
+ * Without JavaScript the link simply opens the video on YouTube.
  * Props: id — YouTube video id; title — accessible name of the video; poster — optional local poster image.
  */
 import type { ImageMetadata } from 'astro';
@@ -16,16 +17,17 @@ const { id, title, poster } = Astro.props;
 ---
 
 <div class="video" data-youtube-id={id} data-title={title}>
-  <button type="button" class="play">
+  <a class="play" href={`https://www.youtube.com/watch?v=${id}`}>
     {poster && <Image src={poster} alt="" widths={[640, 960, 1280]} sizes="(max-width: 860px) 100vw, 860px" loading="eager" fetchpriority="high" />}
     <span class="label">Play video: {title}</span>
-  </button>
+  </a>
 </div>
 
 <script>
   // Replace the poster with the player on click. youtube-nocookie avoids tracking cookies until playback.
   document.querySelectorAll<HTMLElement>('.video[data-youtube-id]').forEach((box) => {
-    box.querySelector('button')?.addEventListener('click', () => {
+    box.querySelector('.play')?.addEventListener('click', (event) => {
+      event.preventDefault(); // JS is on: embed in place instead of leaving the page
       const iframe = document.createElement('iframe');
       iframe.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(box.dataset.youtubeId ?? '')}?autoplay=1`;
       iframe.title = box.dataset.title ?? 'Video';
@@ -53,9 +55,7 @@ const { id, title, poster } = Astro.props;
   }
   .play {
     position: relative;
-    padding: 0;
-    background: none;
-    cursor: pointer;
+    display: block;
   }
   .play img {
     width: 100%;

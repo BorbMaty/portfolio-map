@@ -8,5 +8,8 @@ const site = process.env.SITE_URL || 'http://localhost:4321';
 export default defineConfig({
   site,
   output: 'static',
+  // Pages build to <path>/index.html, so URLs end in /. 'always' makes dev reject slash-less links,
+  // which would otherwise cost a redirect per click on Cloudflare Pages.
+  trailingSlash: 'always',
   integrations: [mdx(), preact()],
 });

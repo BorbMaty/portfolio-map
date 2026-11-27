@@ -18,11 +18,13 @@ links:
   - { label: Source code, href: "https://github.com/BorbMaty/TractorVR", kind: repo }
   - { label: Physics model, href: "https://github.com/BorbMaty/TractorVR/blob/main/docs/PHYSICS.md", kind: docs }
   # TODO(Mara): add { label: Gameplay video, href: "https://youtu.be/<id>", kind: video } once uploaded
+# Image hero until the gameplay video is on YouTube. TODO(Mara): then switch to
+#   kind: youtube, src: <11-character video id>, alt: Gameplay of the Tractor VR simulator,
+#   poster: ../../assets/media/tractor-vr/poster.webp
 hero:
-  kind: youtube
-  src: TODO_VIDEO_ID # TODO(Mara): YouTube video id
-  alt: Gameplay of the Tractor VR simulator
-  poster: ../../assets/media/tractor-vr/poster.webp
+  kind: image
+  src: ../../assets/media/tractor-vr/poster.webp
+  alt: TODO(Mara) cab view of the Tractor VR simulator
 ---
 import { Image } from 'astro:assets';
 import Gallery from '../../components/Gallery.astro';
