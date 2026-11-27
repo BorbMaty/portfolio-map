@@ -43,9 +43,9 @@ jobs:
           path: .lighthouseci
           if-no-files-found: ignore
 
-      # Deploy only from main, and only once the Cloudflare secrets exist (README: Deployment).
+      # Deploy only from main, and only once the Cloudflare project and SITE_URL are set (otherwise OG/canonical URLs point to localhost).
       - name: Deploy to Cloudflare Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CLOUDFLARE_PROJECT != ''
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CLOUDFLARE_PROJECT != '' && vars.SITE_URL != ''
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
