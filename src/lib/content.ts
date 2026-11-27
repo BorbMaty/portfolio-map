@@ -6,6 +6,12 @@ export async function getProjects() {
   return all.sort((a, b) => a.data.order - b.data.order);
 }
 
+/** True for real URLs; TODO placeholders in cv.yaml are rendered as plain text instead of broken links. */
+export const isUrl = (href: string) => /^https?:\/\//.test(href);
+
+/** True when `email` looks like an address (so we never emit `mailto:TODO(Mara)`). */
+export const isEmail = (email: string) => /^[^\s@]+@[^\s@]+$/.test(email);
+
 /** The single CV entry from `src/content/cv.yaml`. Throws if the file is missing so the build fails loudly. */
 export async function getCv() {
   const entry = await getEntry('cv', 'cv');

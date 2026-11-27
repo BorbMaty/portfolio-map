@@ -1,0 +1,128 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import { getCv, getProjects, isEmail, isUrl } from '../lib/content';
+
+const cv = await getCv();
+const projects = await getProjects();
+---
+
+<Base title={cv.name} description={`${cv.headline}. I build software that sees, simulates and monitors the physical world.`}>
+  <section class="banner wrap" aria-labelledby="hero-name">
+    <h1 id="hero-name">{cv.name}</h1>
+    <p class="headline">{cv.headline}</p>
+    <p class="story">I build software that sees, simulates and monitors the physical world.</p>
+    <p class="actions">
+      <a class="button primary" href="#map">Explore the map</a>
+      <a class="button" href="/cv">View CV</a>
+      <a class="button" href="#contact">Contact</a>
+    </p>
+  </section>
+
+  <section id="projects" class="wrap" aria-labelledby="quest-log">
+    <h2 id="quest-log">Quest log</h2>
+    <ul class="quests" role="list">
+      {
+        projects.map((p) => (
+          <li class:list={['quest', p.data.weight]}>
+            {p.data.hero.kind === 'image' && (
+              <Image src={p.data.hero.src} alt="" widths={[400, 800]} sizes="(max-width: 768px) 100vw, 400px" />
+            )}
+            {p.data.hero.kind === 'youtube' && p.data.hero.poster && (
+              <Image src={p.data.hero.poster} alt="" widths={[400, 800]} sizes="(max-width: 768px) 100vw, 400px" />
+            )}
+            <p class="region">{p.data.region}</p>
+            <h3>
+              <a href={`/projects/${p.data.slug}`}>{p.data.title}</a>
+            </h3>
+            <p>{p.data.pitch}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section id="contact" class="wrap" aria-labelledby="contact-heading">
+    <h2 id="contact-heading">Contact</h2>
+    <ul class="contact" role="list">
+      <li>{isEmail(cv.email) ? <a href={`mailto:${cv.email}`}>{cv.email}</a> : <span>Email: {cv.email}</span>}</li>
+      {cv.links.map((l) => <li>{isUrl(l.href) ? <a href={l.href}>{l.label}</a> : <span>{l.label}: {l.href}</span>}</li>)}
+      <li><a class="button primary" href="/cv.pdf" download>Download CV (PDF)</a></li>
+    </ul>
+  </section>
+</Base>
+
+<style>
+  .banner {
+    padding-block: 3rem 2rem;
+  }
+  .banner h1 {
+    margin: 0;
+    font-size: clamp(2rem, 6vw, 3.25rem);
+  }
+  .headline {
+    margin: 0.25rem 0 0;
+    font-size: 1.25rem;
+    color: var(--muted);
+  }
+  .story {
+    font-size: 1.15rem;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .quests {
+    display: grid;
+    grid-auto-flow: dense; /* let smaller cards fill the gaps next to two-column flagships */
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 1rem;
+    padding: 0;
+    list-style: none;
+  }
+  .quest {
+    position: relative;
+    padding: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  /* Flagships span two columns so recruiters see the top two projects first. */
+  .quest.flagship {
+    grid-column: span 2;
+  }
+  @media (max-width: 768px) {
+    .quest.flagship {
+      grid-column: auto;
+    }
+  }
+  .quest img {
+    width: 100%;
+    border-radius: var(--radius);
+  }
+  .quest h3 {
+    margin: 0.25rem 0;
+  }
+  /* Whole card is clickable via the heading link's stretched pseudo-element. */
+  .quest h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .region {
+    margin: 0.5rem 0 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .contact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.5rem;
+    padding: 0;
+    list-style: none;
+  }
+</style>

@@ -1,0 +1,23 @@
+---
+/**
+ * Standalone, shareable project page: the site shell plus the project panel with its own OG tags.
+ * Phase 2 renders the same panel over the map.
+ * Props: project — a `projects` collection entry; the rendered MDX body goes in the default slot.
+ */
+import type { CollectionEntry } from 'astro:content';
+import Base from './Base.astro';
+import ProjectPanel from '../components/ProjectPanel.astro';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { project } = Astro.props;
+const { title, pitch, hero } = project.data;
+const ogImage = hero.kind === 'image' ? hero.src : hero.poster;
+---
+
+<Base title={title} description={pitch} image={ogImage}>
+  <ProjectPanel project={project}>
+    <slot />
+  </ProjectPanel>
+</Base>

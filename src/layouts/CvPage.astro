@@ -1,0 +1,160 @@
+---
+/**
+ * Plain, ATS-friendly CV: one column, semantic headings and lists, no decorative images.
+ * The print stylesheet targets A4 (max 2 pages) and is what scripts/build-cv-pdf.ts prints to cv.pdf.
+ * Projects come from the `projects` collection so /cv, the PDF and project pages never disagree.
+ */
+import Base from './Base.astro';
+import { getCv, getProjects, isEmail, isUrl } from '../lib/content';
+
+const cv = await getCv();
+const projects = await getProjects();
+---
+
+<Base title="CV" description={`CV of ${cv.name}: ${cv.headline}.`}>
+  <div class="cv">
+    <header>
+      <h1>{cv.name}</h1>
+      <p class="headline">{cv.headline}</p>
+      <ul class="contact-line">
+        <li>{cv.location}</li>
+        <li>{isEmail(cv.email) ? <a href={`mailto:${cv.email}`}>{cv.email}</a> : cv.email}</li>
+        {cv.links.map((l) => <li>{isUrl(l.href) ? <a href={l.href}>{l.label}</a> : `${l.label}: ${l.href}`}</li>)}
+      </ul>
+      <p class="no-print"><a href="/cv.pdf" download>Download CV (PDF)</a></p>
+    </header>
+
+    <section aria-labelledby="cv-summary">
+      <h2 id="cv-summary">Summary</h2>
+      <p>{cv.summary}</p>
+    </section>
+
+    <section aria-labelledby="cv-projects">
+      <h2 id="cv-projects">Projects</h2>
+      {
+        projects.map((p) => (
+          <article class="item">
+            <h3>
+              <a href={new URL(`/projects/${p.data.slug}`, Astro.site).href}>{p.data.title}</a>
+            </h3>
+            <p>{p.data.pitch}</p>
+            <p class="small">
+              {p.data.metrics.slice(0, 2).map((m) => `${m.label}: ${m.value}`).join(' · ')}
+            </p>
+            <p class="small">Stack: {p.data.stack.join(', ')}</p>
+          </article>
+        ))
+      }
+    </section>
+
+    <section aria-labelledby="cv-experience">
+      <h2 id="cv-experience">Experience</h2>
+      {
+        cv.experience.map((e) => (
+          <article class="item">
+            <h3>{e.title}, {e.org}</h3>
+            <p class="small">{e.period}</p>
+            <ul>{e.details.map((d) => <li>{d}</li>)}</ul>
+          </article>
+        ))
+      }
+    </section>
+
+    <section aria-labelledby="cv-education">
+      <h2 id="cv-education">Education</h2>
+      {
+        cv.education.map((e) => (
+          <article class="item">
+            <h3>{e.degree}, {e.school}</h3>
+            <p class="small">{e.period}</p>
+            <ul>{e.details.map((d) => <li>{d}</li>)}</ul>
+          </article>
+        ))
+      }
+    </section>
+
+    <section aria-labelledby="cv-skills">
+      <h2 id="cv-skills">Skills</h2>
+      <ul>{cv.skills.map((s) => <li><strong>{s.group}:</strong> {s.items.join(', ')}</li>)}</ul>
+    </section>
+
+    <section aria-labelledby="cv-languages">
+      <h2 id="cv-languages">Languages</h2>
+      <ul>{cv.languages.map((l) => <li>{l.name}: {l.level}</li>)}</ul>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .cv {
+    max-width: 46rem;
+    margin-inline: auto;
+    padding: 1.5rem 1.25rem;
+  }
+  h1 {
+    margin: 0;
+  }
+  .headline {
+    margin: 0.25rem 0;
+    font-size: 1.15rem;
+  }
+  .contact-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    padding: 0;
+    list-style: none;
+    color: var(--muted);
+  }
+  h2 {
+    margin: 1.5rem 0 0.5rem;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 1.2rem;
+  }
+  h3 {
+    margin: 0.75rem 0 0.1rem;
+    font-family: var(--font-body);
+    font-size: 1rem;
+  }
+  .item p {
+    margin: 0.1rem 0;
+  }
+  .small {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  @media print {
+    /* Force the day palette on paper: ink on white, whatever theme was on screen. */
+    :global(html) {
+      --bg: #fff;
+      --surface: #fff;
+      --text: #000;
+      --muted: #333;
+      --accent: #000;
+      --border: #999;
+      font-size: 10pt;
+    }
+    :global(.site-header),
+    :global(.site-footer),
+    :global(.skip),
+    .no-print {
+      display: none;
+    }
+    .cv {
+      max-width: none;
+      padding: 0;
+    }
+    .item {
+      break-inside: avoid;
+    }
+    h2 {
+      break-after: avoid;
+    }
+  }
+  @page {
+    size: A4;
+    margin: 14mm 16mm;
+  }
+</style>
