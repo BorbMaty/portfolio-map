@@ -6,12 +6,13 @@ regionId: watchtower
 weight: flagship
 order: 2
 pitch: AI monitoring for 3D printers - three cameras, a cloud pipeline and a YOLOv8x model that flags 9 failure types.
-period: TODO(Mara)
-role: TODO(Mara)
+period: 2025 – 2026
+role: Solo developer, BSc thesis; published at AMIRA 2026
 stack: [Python, YOLOv8x, Raspberry Pi 4B, MediaMTX, WebRTC, GCP Pub/Sub, Cloud Functions, Vertex AI, Firestore, Firebase Hosting, Terraform, Cloudflare Tunnel]
+# Model numbers: the thesis abstract (docs/latex/docs/chapters/abstractEn.tex), the final reported results.
 metrics:
-  - { label: mAP50, value: 92.6 % }
-  - { label: Recall, value: 87.3 % }
+  - { label: mAP50, value: 89.2 % }
+  - { label: Recall, value: 83.6 % }
   - { label: Inference, value: ~23 ms/frame }
   - { label: Failure classes, value: "9" }
 links:
@@ -19,38 +20,45 @@ links:
 hero:
   kind: image
   src: ../../assets/media/printer-monitor/hero.webp
-  alt: TODO(Mara) architecture diagram of the monitoring pipeline
+  alt: "The live dashboard: three camera views of a 3D printer with a failed print, next to the event log of detections"
+gallery:
+  - src: ../../assets/media/printer-monitor/gallery/01.webp
+    alt: >-
+      System architecture: a Raspberry Pi with three USB cameras, MediaMTX and a Cloudflare tunnel at the edge; Pub/Sub,
+      Cloud Functions, a Vertex AI YOLOv8x endpoint, Firestore and the Firebase-hosted dashboard on Google Cloud
+  - src: ../../assets/media/printer-monitor/gallery/02.webp
+    alt: "The inference log page: the latest frame from each camera above a table of recent inferences and their detections"
 ---
 
 ## Problem
 
-TODO(Mara): write in your own words
-
-Raw notes:
-
-- BA thesis: "3D printing process monitoring and fault detection with artificial intelligence".
+A 3D print can run for hours, and it usually runs unattended. When it fails (the filament turns into spaghetti, a layer
+shifts, the part comes off the bed), the printer keeps going: it wastes material and time, and it can damage the machine.
+Nobody notices until they come back.
 
 ## What I built
 
-TODO(Mara): write in your own words
+A monitoring system that watches the printer with three cameras and recognises nine kinds of failure in real time. The
+model is a YOLOv8x network I trained on a dataset I captured and annotated myself. It reaches 89.2 % mAP50 and 83.6 %
+recall, and it takes about 23 ms to analyse a frame.
 
-Raw notes:
-
-- Raspberry Pi 4B with three USB cameras; MediaMTX converts RTSP to WebRTC; exposed through a Cloudflare tunnel.
-- YOLOv8x detecting 9 failure classes; email alerts; Firebase-hosted dashboard.
-- Dataset audit found augmentation duplicates and val/train leakage from video sequences; fixed with a group-aware split.
+The four failures that ruin a print (spaghetti, not sticking, layer shift, warping) send an email straight away; the
+others are logged to a live dashboard. The dashboard shows the three camera streams over WebRTC with the detections on
+top, and an inference log with every analysed frame. A switch on the dashboard pauses capture remotely.
 
 ## Architecture
 
-TODO(Mara): write in your own words
+The edge is a Raspberry Pi 4B. MediaMTX turns the three camera feeds into WebRTC streams, published through a Cloudflare
+tunnel, and a small Python service sends frames to Google Cloud Pub/Sub.
 
-Raw notes:
-
-- GCP Pub/Sub topics `frames-in` and `detections-out`.
-- Cloud Functions: Dispatcher, AlertManager.
-- Vertex AI endpoint serving YOLOv8x on a T4 GPU (europe-west1).
-- Firestore for state; infrastructure in Terraform.
+In the cloud, a dispatcher Cloud Function forwards each frame to a Vertex AI endpoint that runs the model on a T4 GPU, and
+drops frames older than 5 s, so a restarted model is not flooded by a backlog. The model publishes its result for every
+frame, empty or not; a second Cloud Function stores it in Firestore, raises alerts and sends the emails. The dashboard is
+a plain JavaScript page on Firebase Hosting that listens to Firestore. All of the infrastructure is defined in Terraform.
 
 ## What I learned
 
-TODO(Mara): write in your own words
+Building the whole path, from a camera on the printer to an alert email, taught me that the model is the smallest
+part of a working system. Most of the effort went into what happens around it: getting frames reliably off the Pi,
+keeping a GPU endpoint from drowning in a backlog, and keeping its cost under control, since the T4 GPU is the only part
+that really costs money.
