@@ -20,9 +20,11 @@ Status: `[x]` done · `[ ]` open.
   out of the build; drop `client:visible` from `MapIsland` (decided 2026-11-27: no map JS until phase 2.3,
   where it comes back with OpenSeadragon).
   *Gate:* tests assert every image has alt text and no draft media in `dist/`.
-- [ ] **1.4 Content pass (Mara writes)** — project texts, `cv.yaml`, charts, screenshots, gameplay video.
+- [x] **1.4 Content pass (Mara writes)** (PR #11) — project texts, `cv.yaml`, charts, screenshots, gameplay video.
   Claude formats, fact-checks against the repos and fixes layout only.
   *Gate:* a test fails on any `TODO(` in the production build.
+  Open: the Tractor VR gameplay video (image hero until it is on YouTube); AgriCulture CNN and Solar System are drafts
+  (decided 2026-11-28; Solar System has no public repo).
 - [ ] **1.5 Go live** — Cloudflare Pages project, secrets/variables, `SITE_URL`, first deploy, link previews
   checked, Cloudflare Web Analytics.
   *Gate:* `https://<name>.pages.dev` serves the site and `/cv.pdf`. **Phase 1 done.**

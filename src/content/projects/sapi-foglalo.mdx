@@ -1,0 +1,60 @@
+---
+title: Sapi-Foglaló
+slug: sapi-foglalo
+region: Village
+regionId: village
+weight: small
+order: 4
+pitch: A room-booking web app for Sapientia University - pick a room on the floor plan, see its free slots and book it.
+period: Oct – Dec 2024
+role: Database and backend developer (team of 3)
+stack: [Python, FastAPI, SQLAlchemy, Pydantic, MySQL (Azure), HTML, CSS, JavaScript]
+metrics:
+  - { label: Team, value: 3 students }
+  - { label: Floors on the map, value: "4" }
+links:
+  - { label: Source code, href: "https://github.com/BorbMaty/Sapi-Foglalo", kind: repo }
+# Screenshots: figures 8-13 of docs.pdf. The hero is cropped below the header, which shows a teammate's email address.
+hero:
+  kind: image
+  src: ../../assets/media/sapi-foglalo/hero.webp
+  alt: The ground-floor plan of the university building, with bookable rooms in a wood texture and the other rooms greyed out
+gallery:
+  - { src: ../../assets/media/sapi-foglalo/gallery/01.webp, alt: The login page over a watercolour of the Sapientia building in Târgu Mureș }
+  - { src: ../../assets/media/sapi-foglalo/gallery/02.webp, alt: "The four floor plans stacked; the + and - buttons switch between floors" }
+  - { src: ../../assets/media/sapi-foglalo/gallery/03.webp, alt: "Booking room 114: date, start and end time, next to the room's booked slots in red and free two-hour slots in green" }
+  - { src: ../../assets/media/sapi-foglalo/gallery/04.webp, alt: "Database diagram: the User, Reserve, Room and Position tables and their relations" }
+---
+
+A university project built by a team of three, supervised by Dr. Zoltán Szántó.
+
+## Problem
+
+Booking a room at our university for anything outside the timetable, such as a university event, meant writing a
+paper request for every booking and handing it in. It was slow, nobody could see which rooms were already taken, and
+mistakes such as two bookings for the same slot were easy to make.
+
+## What I built
+
+A web app that replaces the paper. After logging in, you see the floor plan of the building: bookable rooms stand out in a
+wood texture, the rest (offices, the library, the buffet) are greyed out. Pick a room, choose a date, and the app lists
+that day's booked slots in red and suggests free two-hour slots in green. Your own bookings are in one list, each with a
+delete button.
+
+There is no sign-up on purpose: only trusted users can book, so accounts are added directly to the database.
+
+## Architecture
+
+The backend is a FastAPI REST API in Python. SQLAlchemy maps the tables to Python objects, a data-access class per entity
+(users, rooms, reservations, positions, passwords) keeps the database code in one layer, and Pydantic models validate
+everything that crosses the API. The data lives in a MySQL database on Azure. The frontend is plain HTML, CSS and
+JavaScript.
+
+We worked through GitHub pull requests, so every change was reviewed before it reached the main branch, and planned the
+work on a Kanban board.
+
+## What I learned
+
+How to connect a relational database, a backend and a frontend into one working application: modelling the data in
+MySQL, exposing it through a FastAPI REST API with validated request and response models, and serving it to the browser
+interface.
