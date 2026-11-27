@@ -51,8 +51,10 @@ const projects = defineCollection({
           poster: image().optional(),
         }),
       ]),
-      // Screenshots shown under the body, in this order. Alt text is required here and on heroes: an empty or blank alt fails the build.
-      gallery: z.array(z.object({ src: image(), alt: z.string().trim().min(1) })).default([]),
+      // Screenshots shown under the body, in this order. Alt text is required here and on heroes: an empty or blank alt
+      // fails the build. strict(): an unquoted comma in a { src, alt } flow mapping splits the alt into a stray key,
+      // which zod would otherwise drop silently.
+      gallery: z.array(z.object({ src: image(), alt: z.string().trim().min(1) }).strict()).default([]),
       draft: z.boolean().default(false),
     }),
 });
