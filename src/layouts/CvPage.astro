@@ -126,8 +126,9 @@ const projects = await getProjects();
   }
 
   @media print {
-    /* Force the day palette on paper: ink on white, whatever theme was on screen. */
-    :global(html) {
+    /* Force ink on white on paper, whatever theme was on screen.
+       html[data-theme] outranks the [data-theme='day'|'night'] theme rules. */
+    :global(html[data-theme]) {
       --bg: #fff;
       --surface: #fff;
       --text: #000;
@@ -135,6 +136,7 @@ const projects = await getProjects();
       --accent: #000;
       --border: #999;
       font-size: 10pt;
+      line-height: 1.4;
     }
     :global(.site-header),
     :global(.site-footer),
