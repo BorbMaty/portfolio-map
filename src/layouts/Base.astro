@@ -6,6 +6,7 @@
  *   title       — page title, without the site name suffix
  *   description — meta/OG description
  *   image       — optional local image for og:image (exported as 1200 px JPEG, the most widely supported format)
+ *   noindex     — for pages that are not real content (404): no canonical/og:url, robots noindex
  */
 import '@fontsource/cinzel/600.css';
 import '@fontsource-variable/inter';
@@ -18,8 +19,9 @@ interface Props {
   title: string;
   description: string;
   image?: ImageMetadata;
+  noindex?: boolean;
 }
-const { title, description, image } = Astro.props;
+const { title, description, image, noindex = false } = Astro.props;
 const cv = await getCv();
 
 const fullTitle = title === cv.name ? title : `${title} · ${cv.name}`;
@@ -35,11 +37,11 @@ const ogUrl = og ? new URL(og.src, Astro.site) : undefined;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
     <meta property="og:type" content="website" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {!noindex && <meta property="og:url" content={canonical} />}
     {ogUrl && <meta property="og:image" content={ogUrl} />}
     <meta name="twitter:card" content={ogUrl ? 'summary_large_image' : 'summary'} />
     <meta name="theme-color" content="#f6f0e1" media="(prefers-color-scheme: light)" />
