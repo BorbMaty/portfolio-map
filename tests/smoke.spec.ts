@@ -118,6 +118,25 @@ test('every image has alt text; content images describe themselves', async ({ pa
   expect(await page.locator('.panel img').count()).toBeGreaterThan(0);
 });
 
+test('quest-log images are never upscaled from a too-small source', async ({ page }) => {
+  // For srcset images Chrome reports naturalWidth as the slot width it derived from `sizes`; if that is smaller than
+  // the rendered width, the chosen file is stretched (the blurry flagship cards fixed on 2026-11-28).
+  for (const width of [800, 1000, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    const imgs = page.locator('.quest img');
+    await imgs.last().scrollIntoViewIfNeeded();
+    for (const img of await imgs.all()) {
+      await expect(img).toHaveJSProperty('complete', true);
+      const { shown, slot } = await img.evaluate((i: HTMLImageElement) => ({
+        shown: i.getBoundingClientRect().width,
+        slot: i.naturalWidth,
+      }));
+      expect(slot, `viewport ${width}: ${await img.getAttribute('src')}`).toBeGreaterThanOrEqual(Math.floor(shown));
+    }
+  }
+});
+
 test('the landing page ships no map JS until phase 2.3', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('astro-island')).toHaveCount(0);

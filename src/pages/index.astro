@@ -16,6 +16,17 @@ const landmarks: Landmark[] = regions.flatMap((r) => {
   if (r.href) return [{ ...r, label: r.id === 'capital' ? 'About' : 'Contact', href: r.href }];
   return [];
 });
+
+// Quest-log image slot widths; `sizes` must be at least the rendered width, or the browser picks a source that is too
+// small and upscales it (blurry). The grid (16rem min columns, page max 68rem = 1088 px) has 3 columns from 840 px:
+// a flagship image is then at most ~660 px, the others ~310 px. From 769 to 839 px there are only 2 columns, so a
+// flagship is full width and the others half; at 768 px and below flagships stop spanning.
+const cardSizes = (weight: string) =>
+  weight === 'flagship'
+    ? '(max-width: 840px) 100vw, 660px'
+    : '(max-width: 768px) 100vw, (max-width: 840px) 50vw, 310px';
+// Enough widths for 1x-3x screens: 310 px @3x and 660 px @2x both need ~1000-1320 px.
+const cardWidths = [320, 660, 990, 1320];
 ---
 
 <Base title={cv.name} description={`${cv.headline}. I build software that sees, simulates and monitors the physical world.`}>
@@ -44,10 +55,10 @@ const landmarks: Landmark[] = regions.flatMap((r) => {
         projects.map((p) => (
           <li class:list={['quest', p.data.weight]}>
             {p.data.hero.kind === 'image' && (
-              <Image src={p.data.hero.src} alt="" widths={[400, 800]} sizes="(max-width: 768px) 100vw, 400px" />
+              <Image src={p.data.hero.src} alt="" widths={cardWidths} sizes={cardSizes(p.data.weight)} />
             )}
             {p.data.hero.kind === 'youtube' && p.data.hero.poster && (
-              <Image src={p.data.hero.poster} alt="" widths={[400, 800]} sizes="(max-width: 768px) 100vw, 400px" />
+              <Image src={p.data.hero.poster} alt="" widths={cardWidths} sizes={cardSizes(p.data.weight)} />
             )}
             <p class="region">{p.data.region}</p>
             <h3>
