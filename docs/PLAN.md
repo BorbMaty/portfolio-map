@@ -131,7 +131,7 @@ Lighthouse ≥ 90 on mobile. Project images as AVIF/WebP with `srcset`.
 src/
   content/
     projects/        tractor-vr.mdx, printer-monitor.mdx, agriculture-cnn.mdx,
-                     solar-system.mdx, village.mdx
+                     solar-system.mdx, sapi-foglalo.mdx
     cv.yaml          education, skills, experience (feeds /cv and the PDF)
     config.ts        content schema (title, region, weight, stack, metrics, links, media)
   map/
