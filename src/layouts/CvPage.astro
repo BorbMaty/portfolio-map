@@ -5,7 +5,7 @@
  * Projects come from the `projects` collection so /cv, the PDF and project pages never disagree.
  */
 import Base from './Base.astro';
-import { getCv, getProjects, isEmail, isUrl } from '../lib/content';
+import { cvPdfName, getCv, getProjects, isEmail, isUrl } from '../lib/content';
 
 const cv = await getCv();
 const projects = await getProjects();
@@ -21,7 +21,7 @@ const projects = await getProjects();
         <li>{isEmail(cv.email) ? <a href={`mailto:${cv.email}`}>{cv.email}</a> : cv.email}</li>
         {cv.links.map((l) => <li>{isUrl(l.href) ? <a href={l.href}>{l.label}</a> : `${l.label}: ${l.href}`}</li>)}
       </ul>
-      <p class="no-print"><a href="/cv.pdf" download>Download CV (PDF)</a></p>
+      <p class="no-print"><a href="/cv.pdf" download={cvPdfName(cv.name)}>Download CV (PDF)</a></p>
     </header>
 
     <section aria-labelledby="cv-summary">
