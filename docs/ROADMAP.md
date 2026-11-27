@@ -13,10 +13,10 @@ Status: `[x]` done · `[ ]` open.
   Lighthouse CI; CI `permissions: contents: read` and no cancelled deploys; PDF script cleanup and a hard
   2-page budget; title assertion without regex; 404 page `noindex` and no canonical.
   *Gate:* CI green, and each fixed check fails when deliberately broken.
-- [x] **1.2 Links and video** (this PR) — `trailingSlash: 'always'` and links updated; tractor hero is an image until a
+- [x] **1.2 Links and video** (PR #7) — `trailingSlash: 'always'` and links updated; tractor hero is an image until a
   real video exists; YouTube id validated; no-JS fallback link.
   *Gate:* no redirecting internal links in `dist/` (tested); a malformed id fails the build.
-- [ ] **1.3 Gallery and media** — gallery in the schema (`{ src, alt }`) with real alt text; draft media kept
+- [x] **1.3 Gallery and media** (PR #8) — gallery in the schema (`{ src, alt }`) with real alt text; draft media kept
   out of the build; drop `client:visible` from `MapIsland` (decided 2026-11-27: no map JS until phase 2.3,
   where it comes back with OpenSeadragon).
   *Gate:* tests assert every image has alt text and no draft media in `dist/`.

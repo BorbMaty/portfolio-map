@@ -1,6 +1,7 @@
 /**
  * Map island. Phase 1: a static 16:9 draft image with landmark links placed by normalised coordinates.
- * Phase 2 replaces the <img> with OpenSeadragon deep-zoom tiles and keeps the landmark overlay.
+ * Rendered on the server only (no client directive), so phase 1 ships no map JS.
+ * Phase 2.3 replaces the <img> with OpenSeadragon deep-zoom tiles, hydrates it, and keeps the landmark overlay.
  * Hidden below 768 px by CSS; mobile visitors use the quest log instead.
  */
 import './map.css';

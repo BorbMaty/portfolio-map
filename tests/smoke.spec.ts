@@ -3,7 +3,10 @@
  * Project lists are read from the MDX frontmatter so new projects are covered automatically.
  */
 import { test, expect } from '@playwright/test';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { join } from 'node:path';
+import { isDraftSource } from '../src/lib/draft.ts';
 
 // Minimal frontmatter read: only slug and draft are needed, and both are plain one-line scalars.
 const projectDir = new URL('../src/content/projects/', import.meta.url);
@@ -13,7 +16,7 @@ const projects = readdirSync(projectDir)
     const src = readFileSync(new URL(f, projectDir), 'utf8');
     const slug = src.match(/^slug:\s*(\S+)/m)?.[1];
     if (!slug) throw new Error(`${f}: no slug in frontmatter`);
-    return { slug, draft: /^draft:\s*true\s*$/m.test(src), youtube: /^hero:\s*\n\s+kind:\s*youtube\b/m.test(src) };
+    return { slug, draft: isDraftSource(src), youtube: /^hero:\s*\n\s+kind:\s*youtube\b/m.test(src) };
   });
 const published = projects.filter((p) => !p.draft).map((p) => p.slug);
 const drafts = projects.filter((p) => p.draft).map((p) => p.slug);
@@ -21,6 +24,13 @@ const videoProjects = projects.filter((p) => !p.draft && p.youtube).map((p) => p
 
 // Same fallback as astro.config.mjs: run the tests with the SITE_URL the build used.
 const site = process.env.SITE_URL || 'http://localhost:4321';
+
+test('isDraftSource reads only the frontmatter and every YAML spelling of true', () => {
+  expect(isDraftSource('---\ntitle: a\ndraft: true\n---\nbody')).toBe(true);
+  expect(isDraftSource('---\r\ndraft: True  # wip\r\n---\r\n')).toBe(true);
+  expect(isDraftSource('---\ndraft: false\n---\n')).toBe(false);
+  expect(isDraftSource('---\ntitle: a\n---\n```yaml\ndraft: true\n```\n')).toBe(false);
+});
 
 test('there is at least one published project', () => {
   expect(published.length).toBeGreaterThan(0);
@@ -94,6 +104,41 @@ for (const slug of drafts) {
     }
   });
 }
+
+test('every image has alt text; content images describe themselves', async ({ page }) => {
+  for (const path of ['/', '/cv/', '/about/', ...published.map((s) => `/projects/${s}/`)]) {
+    await page.goto(path);
+    // Decorative images (quest-log thumbnails, map backdrop) carry alt="" on purpose; a missing attribute is a bug.
+    await expect(page.locator('img:not([alt])'), `${path}: <img> without alt`).toHaveCount(0);
+    // Images inside the project panel (hero, body figures, gallery) are content and need a description.
+    await expect(page.locator('.panel img[alt=""]'), `${path}: content image with empty alt`).toHaveCount(0);
+  }
+  // Guard against a vacuous pass: if `.panel` were renamed, the selector above would match nothing.
+  await page.goto(`/projects/${published[0]}/`);
+  expect(await page.locator('.panel img').count()).toBeGreaterThan(0);
+});
+
+test('the landing page ships no map JS until phase 2.3', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('astro-island')).toHaveCount(0);
+});
+
+test('no draft media is copied into dist/', () => {
+  const files = (dir: URL) =>
+    readdirSync(dir, { recursive: true, withFileTypes: true })
+      .filter((e) => e.isFile())
+      .map((e) => join(e.parentPath, e.name));
+  const hash = (file: string) => createHash('sha256').update(readFileSync(file)).digest('hex');
+  // Byte-identical copies are what leaks: Astro emits an imported original and only deletes it after transforming it.
+  const distHashes = new Set(files(new URL('../dist/', import.meta.url)).map(hash));
+  for (const slug of drafts) {
+    const media = new URL(`../src/assets/media/${slug}/`, import.meta.url);
+    if (!existsSync(media)) continue;
+    for (const file of files(media)) {
+      expect(distHashes.has(hash(file)), `draft media ${file} found in dist/`).toBe(false);
+    }
+  }
+});
 
 test('YouTube heroes load no iframe until the poster is clicked', async ({ page }) => {
   // Dormant until a project has a video hero (tractor-vr uses an image until its video is uploaded).
