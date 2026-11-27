@@ -18,6 +18,9 @@ const projects = readdirSync(projectDir)
 const published = projects.filter((p) => !p.draft).map((p) => p.slug);
 const drafts = projects.filter((p) => p.draft).map((p) => p.slug);
 
+// Same fallback as astro.config.mjs: run the tests with the SITE_URL the build used.
+const site = process.env.SITE_URL || 'http://localhost:4321';
+
 test('there is at least one published project', () => {
   expect(published.length).toBeGreaterThan(0);
 });
@@ -33,6 +36,9 @@ test('unknown route shows the 404 page', async ({ page }) => {
   const res = await page.goto('/no-such-page');
   expect(res?.status()).toBe(404);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Here be dragons');
+  // Not a real page: crawlers must not index it, and it must not claim a canonical URL.
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+  await expect(page.locator('link[rel="canonical"], meta[property="og:url"]')).toHaveCount(0);
 });
 
 test('/cv has exactly one h1', async ({ page }) => {
@@ -47,9 +53,15 @@ for (const slug of published) {
     expect(title).not.toBe('');
     await expect(page.locator('.pitch')).not.toBeEmpty();
     expect(await page.locator('.links a[href]').count()).toBeGreaterThanOrEqual(1);
-    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', new RegExp(`^${title}`));
-    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', new RegExp(`/projects/${slug}/?$`));
-    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /^https?:\/\//);
+    // Plain string checks (no RegExp built from content, so titles like "C++" can't break them).
+    const ogTitle = await page.locator('meta[property="og:title"]').getAttribute('content');
+    expect(ogTitle?.startsWith(title)).toBe(true);
+    // Exact absolute URLs on the configured site, so a localhost build can never pass for production.
+    const expectedUrl = new URL(`/projects/${slug}/`, site).href;
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', expectedUrl);
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', expectedUrl);
+    const ogImage = await page.locator('meta[property="og:image"]').getAttribute('content');
+    expect(new URL(ogImage ?? '').origin).toBe(new URL(site).origin);
   });
 }
 
@@ -72,13 +84,5 @@ test('YouTube iframe is absent until the poster is clicked', async ({ page }) =>
   await expect(page.locator('iframe[src*="youtube-nocookie.com/embed/"]')).toHaveCount(1);
 });
 
-test('landing page stays under 300 KB before the map image', async ({ page }) => {
-  // Sums uncompressed bodies (preview does not compress), so the real transfer is smaller than this.
-  let bytes = 0;
-  page.on('response', async (res) => {
-    if (res.url().includes('/map/')) return;
-    bytes += (await res.body().catch(() => Buffer.alloc(0))).length;
-  });
-  await page.goto('/', { waitUntil: 'networkidle' });
-  expect(bytes).toBeLessThan(300 * 1024);
-});
+// The landing page size budget (< 300 KB) is asserted by Lighthouse CI (lighthouserc.json), which measures
+// real transfer sizes including lazy-loaded resources.
