@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCv } from '../lib/content';
+
+const cv = await getCv();
+---
+
+<Base title="About" description={`About ${cv.name}: ${cv.headline}.`}>
+  <div class="wrap about">
+    <h1>About</h1>
+    <p>{cv.summary}</p>
+    <p><a href="/cv">Read the full CV</a></p>
+  </div>
+</Base>
+
+<style>
+  .about {
+    max-width: 46rem;
+    padding-block: 2rem;
+  }
+</style>

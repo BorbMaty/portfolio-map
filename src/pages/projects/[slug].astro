@@ -1,0 +1,19 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import ProjectPage from '../../layouts/ProjectPage.astro';
+import { getProjects } from '../../lib/content';
+
+// One static page per non-draft project (drafts also appear in `astro dev`).
+export const getStaticPaths = (async () => {
+  const projects = await getProjects();
+  return projects.map((project) => ({ params: { slug: project.data.slug }, props: { project } }));
+}) satisfies GetStaticPaths;
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+---
+
+<ProjectPage project={project}>
+  <Content />
+</ProjectPage>
