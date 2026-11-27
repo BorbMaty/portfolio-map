@@ -33,7 +33,8 @@ const landmarks: Landmark[] = regions.flatMap((r) => {
   <section id="map" class="wrap" aria-labelledby="map-heading">
     <h2 id="map-heading">The map</h2>
     <p class="map-mobile-note">The map is made for larger screens. Every region is in the <a href="#projects">quest log</a> below.</p>
-    <MapIsland client:visible landmarks={landmarks} />
+    {/* No client directive: phase 1 renders the map as static HTML, no JS until OpenSeadragon (phase 2.3). */}
+    <MapIsland landmarks={landmarks} />
   </section>
 
   <section id="projects" class="wrap" aria-labelledby="quest-log">

@@ -1,38 +1,31 @@
 ---
 /**
- * Lazy-loaded screenshot grid for a project.
- * Drop images into `src/assets/media/<slug>/gallery/`; they appear sorted by filename.
- * Props: slug — the project slug whose gallery folder to show.
+ * Lazy-loaded screenshot grid for a project; each thumbnail links to the full-size image.
+ * Props: images — the project's `gallery` frontmatter entries ({ src, alt }), shown in order.
  */
 import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
 
 interface Props {
-  slug: string;
+  images: { src: ImageMetadata; alt: string }[];
 }
-const { slug } = Astro.props;
-
-// import.meta.glob needs a static pattern, so load every gallery and filter by slug.
-const all = import.meta.glob<{ default: ImageMetadata }>('/src/assets/media/*/gallery/*.{webp,avif,png,jpg,jpeg}', {
-  eager: true,
-});
-const images = Object.entries(all)
-  .filter(([path]) => path.startsWith(`/src/assets/media/${slug}/gallery/`))
-  .sort(([a], [b]) => a.localeCompare(b))
-  .map(([path, mod], i) => ({ path, src: mod.default, alt: `Screenshot ${i + 1}` }));
+const { images } = Astro.props;
 ---
 
 {
   images.length > 0 && (
-    <ul class="gallery" role="list">
-      {images.map((img) => (
-        <li>
-          <a href={img.src.src}>
-            <Image src={img.src} alt={img.alt} widths={[320, 640]} sizes="(max-width: 640px) 100vw, 320px" loading="lazy" />
-          </a>
-        </li>
-      ))}
-    </ul>
+    <section aria-labelledby="gallery-heading">
+      <h2 id="gallery-heading">Gallery</h2>
+      <ul class="gallery" role="list">
+        {images.map((img) => (
+          <li>
+            <a href={img.src.src}>
+              <Image src={img.src} alt={img.alt} widths={[320, 640]} sizes="(max-width: 640px) 100vw, 320px" loading="lazy" />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
