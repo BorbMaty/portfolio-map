@@ -151,6 +151,45 @@ test('quest-log images are never upscaled from a too-small source', async ({ pag
   }
 });
 
+test('gallery lightbox opens, browses with wrap-around and closes back to the thumbnail', async ({ page }) => {
+  // Uses the first published project that has a gallery of at least two images.
+  let thumbs = page.locator('.gallery a');
+  for (const slug of published) {
+    await page.goto(`/projects/${slug}/`);
+    if ((await thumbs.count()) >= 2) break;
+  }
+  const total = await thumbs.count();
+  test.skip(total < 2, 'no published project has a gallery of two or more images');
+  const viewer = page.getByRole('dialog', { name: 'Image viewer' });
+  const count = viewer.locator('.count');
+  const altOf = (i: number) => thumbs.nth(i).locator('img').getAttribute('alt');
+
+  // Click opens the clicked image, with its alt text as the caption.
+  await thumbs.first().click();
+  await expect(viewer).toBeVisible();
+  await expect(count).toHaveText(`1 / ${total}`);
+  await expect(viewer.locator('figcaption')).toHaveText((await altOf(0))!);
+  await expect(viewer.locator('img')).toHaveAttribute('alt', (await altOf(0))!);
+
+  // Arrows move both ways and wrap at the ends; the arrow keys do the same.
+  await viewer.getByRole('button', { name: 'Next image' }).click();
+  await expect(count).toHaveText(`2 / ${total}`);
+  await viewer.getByRole('button', { name: 'Previous image' }).click();
+  await viewer.getByRole('button', { name: 'Previous image' }).click();
+  await expect(count).toHaveText(`${total} / ${total}`);
+  await page.keyboard.press('ArrowRight');
+  await expect(count).toHaveText(`1 / ${total}`);
+
+  // Esc closes and returns focus to the thumbnail; so does the × button.
+  await page.keyboard.press('Escape');
+  await expect(viewer).toBeHidden();
+  await expect(thumbs.first()).toBeFocused();
+  await thumbs.nth(1).click();
+  await viewer.getByRole('button', { name: 'Close' }).click();
+  await expect(viewer).toBeHidden();
+  await expect(thumbs.nth(1)).toBeFocused();
+});
+
 test('the landing page ships no map JS until phase 2.3', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('astro-island')).toHaveCount(0);
