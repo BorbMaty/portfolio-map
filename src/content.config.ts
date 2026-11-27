@@ -57,6 +57,9 @@ const projects = defineCollection({
     }),
 });
 
+// A job or volunteer role on the CV.
+const role = z.object({ title: z.string(), org: z.string(), period: z.string(), details: z.array(z.string()) });
+
 const cv = defineCollection({
   loader: glob({ pattern: 'cv.yaml', base: './src/content' }),
   schema: z.object({
@@ -70,9 +73,13 @@ const cv = defineCollection({
       z.object({ degree: z.string(), school: z.string(), period: z.string(), details: z.array(z.string()) }),
     ),
     skills: z.array(z.object({ group: z.string(), items: z.array(z.string()) })),
-    experience: z.array(
-      z.object({ title: z.string(), org: z.string(), period: z.string(), details: z.array(z.string()) }),
-    ),
+    experience: z.array(role),
+    // Optional sections: an empty list hides the section on /cv and in the PDF.
+    volunteering: z.array(role).default([]),
+    publications: z
+      .array(z.object({ title: z.string(), authors: z.string(), venue: z.string(), year: z.string(), note: z.string().optional() }))
+      .default([]),
+    awards: z.array(z.object({ title: z.string(), year: z.string() })).default([]),
     languages: z.array(z.object({ name: z.string(), level: z.string() })),
   }),
 });

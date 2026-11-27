@@ -73,6 +73,45 @@ const projects = await getProjects();
       }
     </section>
 
+    {
+      cv.publications.length > 0 && (
+        <section aria-labelledby="cv-publications">
+          <h2 id="cv-publications">Publications</h2>
+          {cv.publications.map((p) => (
+            <article class="item">
+              <h3>{p.title}</h3>
+              <p class="small">{p.authors} · {p.venue}, {p.year}</p>
+              {p.note && <p class="small">{p.note}</p>}
+            </article>
+          ))}
+        </section>
+      )
+    }
+
+    {
+      cv.awards.length > 0 && (
+        <section aria-labelledby="cv-awards">
+          <h2 id="cv-awards">Awards</h2>
+          <ul>{cv.awards.map((a) => <li>{a.title} ({a.year})</li>)}</ul>
+        </section>
+      )
+    }
+
+    {
+      cv.volunteering.length > 0 && (
+        <section aria-labelledby="cv-volunteering">
+          <h2 id="cv-volunteering">Leadership and volunteering</h2>
+          {cv.volunteering.map((e) => (
+            <article class="item">
+              <h3>{e.title}, {e.org}</h3>
+              <p class="small">{e.period}</p>
+              <ul>{e.details.map((d) => <li>{d}</li>)}</ul>
+            </article>
+          ))}
+        </section>
+      )
+    }
+
     <section aria-labelledby="cv-skills">
       <h2 id="cv-skills">Skills</h2>
       <ul>{cv.skills.map((s) => <li><strong>{s.group}:</strong> {s.items.join(', ')}</li>)}</ul>
