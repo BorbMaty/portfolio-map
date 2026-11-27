@@ -3,8 +3,19 @@ import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import { getCv, getProjects, isEmail, isUrl } from '../lib/content';
 
+import MapIsland, { type Landmark } from '../map/MapIsland';
+import { regions } from '../map/regions';
+
 const cv = await getCv();
 const projects = await getProjects();
+
+// Only regions that lead somewhere get a landmark: published projects, or a fixed href (Capital, Harbor).
+const landmarks: Landmark[] = regions.flatMap((r) => {
+  const project = projects.find((p) => p.data.slug === r.projectSlug);
+  if (project) return [{ ...r, label: project.data.title, href: `/projects/${project.data.slug}` }];
+  if (r.href) return [{ ...r, label: r.id === 'capital' ? 'About' : 'Contact', href: r.href }];
+  return [];
+});
 ---
 
 <Base title={cv.name} description={`${cv.headline}. I build software that sees, simulates and monitors the physical world.`}>
@@ -17,6 +28,12 @@ const projects = await getProjects();
       <a class="button" href="/cv">View CV</a>
       <a class="button" href="#contact">Contact</a>
     </p>
+  </section>
+
+  <section id="map" class="wrap" aria-labelledby="map-heading">
+    <h2 id="map-heading">The map</h2>
+    <p class="map-mobile-note">The map is made for larger screens. Every region is in the <a href="#projects">quest log</a> below.</p>
+    <MapIsland client:visible landmarks={landmarks} />
   </section>
 
   <section id="projects" class="wrap" aria-labelledby="quest-log">
@@ -72,6 +89,11 @@ const projects = await getProjects();
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
+  }
+  @media (min-width: 768px) {
+    .map-mobile-note {
+      display: none;
+    }
   }
   .quests {
     display: grid;
