@@ -140,6 +140,17 @@ test('no draft media is copied into dist/', () => {
   }
 });
 
+test('the production build contains no TODO( placeholders', () => {
+  // Scans every text file in dist/. cv.pdf is printed from /cv/, so a clean cv/index.html means a clean PDF
+  // (the PDF itself stores text in compressed streams, which a plain search can't read).
+  const dist = new URL('../dist/', import.meta.url);
+  const offenders = readdirSync(dist, { recursive: true, withFileTypes: true })
+    .filter((e) => e.isFile() && /\.(html|xml|txt|json|js|css)$/.test(e.name))
+    .map((e) => join(e.parentPath, e.name))
+    .filter((file) => readFileSync(file, 'utf8').includes('TODO('));
+  expect(offenders, 'files still containing TODO(').toEqual([]);
+});
+
 test('YouTube heroes load no iframe until the poster is clicked', async ({ page }) => {
   // Dormant until a project has a video hero (tractor-vr uses an image until its video is uploaded).
   test.skip(videoProjects.length === 0, 'no published project has a YouTube hero yet');
