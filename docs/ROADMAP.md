@@ -32,7 +32,8 @@ Status: `[x]` done · `[ ]` open.
   (sources outside git, `tiles-src/`). *Gate:* one draft render approved.
 - [ ] **2.2 Tiles** — script cutting the render into deep-zoom WebP tiles. *Gate:* tiles rebuild from one command.
 - [ ] **2.3 Pan / zoom** — OpenSeadragon in `MapIsland`, landmark overlay from `regions.ts`.
-  *Gate:* first map view < 800 KB; landmarks stay pinned while zooming.
+  *Gate:* first map view < 800 KB; landmarks stay pinned while zooming. Exclude map tiles from the
+  landing `resource-summary` budget in `lighthouserc.json` (it counts everything since 1.1).
 - [ ] **2.4 Fly-to + panel** — landmark click animates the view and opens `ProjectPanel`; `/projects/<slug>`
   opens the map with that panel. No GSAP: OpenSeadragon animates the viewport, CSS animates the panel.
   *Gate:* every project URL opens the map with the right panel.
