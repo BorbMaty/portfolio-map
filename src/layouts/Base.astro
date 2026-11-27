@@ -1,0 +1,164 @@
+---
+/**
+ * Site shell: <head> (title, description, canonical, Open Graph, theme-color), header with nav and
+ * theme toggle, footer. Every page uses it.
+ * Props:
+ *   title       — page title, without the site name suffix
+ *   description — meta/OG description
+ *   image       — optional local image for og:image (exported as 1200 px JPEG, the most widely supported format)
+ */
+import '@fontsource/cinzel/600.css';
+import '@fontsource-variable/inter';
+import '../styles/global.css';
+import type { ImageMetadata } from 'astro';
+import { getImage } from 'astro:assets';
+import { getCv } from '../lib/content';
+
+interface Props {
+  title: string;
+  description: string;
+  image?: ImageMetadata;
+}
+const { title, description, image } = Astro.props;
+const cv = await getCv();
+
+const fullTitle = title === cv.name ? title : `${title} · ${cv.name}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const og = image ? await getImage({ src: image, width: 1200, format: 'jpeg' }) : undefined;
+const ogUrl = og ? new URL(og.src, Astro.site) : undefined;
+---
+
+<!doctype html>
+<html lang="en" data-theme="day">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {ogUrl && <meta property="og:image" content={ogUrl} />}
+    <meta name="twitter:card" content={ogUrl ? 'summary_large_image' : 'summary'} />
+    <meta name="theme-color" content="#f6f0e1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1c2430" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      // Runs before paint to avoid a theme flash. localStorage can throw (privacy mode), hence try/catch.
+      (function () {
+        var theme;
+        try {
+          theme = localStorage.getItem('theme');
+        } catch (e) {}
+        if (theme !== 'day' && theme !== 'night') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day';
+        }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip visually-hidden" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap bar">
+        <a class="brand" href="/">{cv.name}</a>
+        <nav aria-label="Main">
+          <ul>
+            <li><a href="/#map">Map</a></li>
+            <li><a href="/#projects">Projects</a></li>
+            <li><a href="/cv">CV</a></li>
+            <li><a href="/#contact">Contact</a></li>
+          </ul>
+        </nav>
+        <button class="theme-toggle" type="button" aria-label="Night theme" aria-pressed="false">
+          <span aria-hidden="true">☾</span>
+        </button>
+      </div>
+    </header>
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="wrap">
+        <p>© {new Date().getFullYear()} {cv.name}</p>
+      </div>
+    </footer>
+    <script>
+      // Theme toggle: flips data-theme and remembers the choice when storage is available.
+      const button = document.querySelector<HTMLButtonElement>('.theme-toggle');
+      const root = document.documentElement;
+      const sync = () => button?.setAttribute('aria-pressed', String(root.dataset.theme === 'night'));
+      sync();
+      button?.addEventListener('click', () => {
+        root.dataset.theme = root.dataset.theme === 'night' ? 'day' : 'night';
+        try {
+          localStorage.setItem('theme', root.dataset.theme);
+        } catch {
+          // Storage blocked: the choice still applies for this page view.
+        }
+        sync();
+      });
+    </script>
+  </body>
+</html>
+
+<style>
+  .skip:focus {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+    height: auto;
+    clip: auto;
+    padding: 0.5rem 1rem;
+    background: var(--surface);
+    z-index: 10;
+  }
+  .site-header {
+    border-bottom: 1px solid var(--border);
+  }
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.5rem;
+    padding-block: 0.75rem;
+  }
+  .brand {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+  }
+  nav {
+    margin-left: auto;
+  }
+  nav ul {
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  nav a {
+    color: var(--text);
+  }
+  .theme-toggle {
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .site-footer {
+    margin-top: 4rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>
