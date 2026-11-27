@@ -1,7 +1,7 @@
 # Portfolio Map — project guide for Claude
 
 Mara's CV + portfolio site. It will later sit on top of an explorable, realistic-terrain fantasy map.
-Full plan: `docs/PLAN.md`. Build order: phase 1 (content + CV, no map), phase 2 (map), phase 3 (polish).
+Full plan: `docs/PLAN.md`. Phases and gates: `docs/ROADMAP.md` (one PR per phase; tick it off when merged).
 
 ## Stack (fixed, don't substitute)
 - Astro 7 + TypeScript (strict), MDX, content collections (`src/content.config.ts`, loader API)
