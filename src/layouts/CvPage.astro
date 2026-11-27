@@ -35,7 +35,7 @@ const projects = await getProjects();
         projects.map((p) => (
           <article class="item">
             <h3>
-              <a href={new URL(`/projects/${p.data.slug}`, Astro.site).href}>{p.data.title}</a>
+              <a href={new URL(`/projects/${p.data.slug}/`, Astro.site).href}>{p.data.title}</a>
             </h3>
             <p>{p.data.pitch}</p>
             <p class="small">

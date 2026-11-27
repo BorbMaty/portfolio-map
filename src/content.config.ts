@@ -32,7 +32,13 @@ const projects = defineCollection({
       // Image heroes are imported files; YouTube heroes carry the video id in `src` and an optional poster image.
       hero: z.discriminatedUnion('kind', [
         z.object({ kind: z.literal('image'), src: image(), alt: z.string() }),
-        z.object({ kind: z.literal('youtube'), src: z.string(), alt: z.string(), poster: image().optional() }),
+        z.object({
+          kind: z.literal('youtube'),
+          // YouTube ids are 11 chars of [A-Za-z0-9_-]; a placeholder or a pasted URL fails the build here.
+          src: z.string().regex(/^[\w-]{11}$/, 'YouTube video id (11 characters), not a URL or placeholder'),
+          alt: z.string(),
+          poster: image().optional(),
+        }),
       ]),
       draft: z.boolean().default(false),
     }),

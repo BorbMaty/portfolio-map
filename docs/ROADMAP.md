@@ -9,15 +9,16 @@ Status: `[x]` done · `[ ]` open.
 
 - [x] **1.0 Content + CV scaffold** — content model, pages, map placeholder, `cv.pdf`, smoke tests, CI
   (PR #1, `d6c24b1`).
-- [ ] **1.1 Make the checks honest** — OG tests assert the real `SITE_URL`; landing size budget moves to
+- [x] **1.1 Make the checks honest** (PR #6) — OG tests assert the real `SITE_URL`; landing size budget moves to
   Lighthouse CI; CI `permissions: contents: read` and no cancelled deploys; PDF script cleanup and a hard
   2-page budget; title assertion without regex; 404 page `noindex` and no canonical.
   *Gate:* CI green, and each fixed check fails when deliberately broken.
-- [ ] **1.2 Links and video** — `trailingSlash: 'always'` and links updated; tractor hero is an image until a
+- [x] **1.2 Links and video** (this PR) — `trailingSlash: 'always'` and links updated; tractor hero is an image until a
   real video exists; YouTube id validated; no-JS fallback link.
   *Gate:* no redirecting internal links in `dist/` (tested); a malformed id fails the build.
 - [ ] **1.3 Gallery and media** — gallery in the schema (`{ src, alt }`) with real alt text; draft media kept
-  out of the build; decide map island hydration (no JS until phase 2?).
+  out of the build; drop `client:visible` from `MapIsland` (decided 2026-11-27: no map JS until phase 2.3,
+  where it comes back with OpenSeadragon).
   *Gate:* tests assert every image has alt text and no draft media in `dist/`.
 - [ ] **1.4 Content pass (Mara writes)** — project texts, `cv.yaml`, charts, screenshots, gameplay video.
   Claude formats, fact-checks against the repos and fixes layout only.
