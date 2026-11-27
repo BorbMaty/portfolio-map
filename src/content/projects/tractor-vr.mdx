@@ -6,33 +6,32 @@ regionId: homestead
 weight: flagship
 order: 1
 pitch: A VR tractor simulator for Meta Quest 2 with a real physics model, working implements and a 9-lesson tutorial.
-period: TODO(Mara)
-role: TODO(Mara)
+period: Oct – Nov 2026
+role: Solo developer (university project, Sapientia IRUM)
 stack: [Unity 6000.6.3f1, C#, URP, OpenXR, Input System, XR Hands, Blender, Python]
+# Quest numbers: full-world benchmark run, docs/benchmark/QuestStandalone_2026-11-01_22-01-41 (drive phase "all").
+# PC VR: phase 4 run, docs/benchmark/PCVR_2026-10-31_00-49-37 (the PC versions were not re-run with the landscape).
 metrics:
-  - { label: Quest 2 average, value: 71.8 fps at 72 Hz }
-  - { label: Frames over budget, value: 0.0 % }
-  - { label: GPU frame time, value: 9.6 ms of 13.9 ms }
-  - { label: PC VR average, value: 89.7 fps }
+  - { label: Quest 2 average, value: 70.9 fps at 72 Hz }
+  - { label: Frames over budget, value: 1.4 % }
+  - { label: GPU frame time, value: 12.0 ms of 13.9 ms }
+  - { label: PC VR average, value: 89.7 fps at 90 Hz }
 links:
   - { label: Source code, href: "https://github.com/BorbMaty/TractorVR", kind: repo }
   - { label: Physics model, href: "https://github.com/BorbMaty/TractorVR/blob/main/docs/PHYSICS.md", kind: docs }
-  # TODO(Mara): add { label: Gameplay video, href: "https://youtu.be/<id>", kind: video } once uploaded
-# Image hero until the gameplay video is on YouTube. TODO(Mara): then switch to
-#   kind: youtube, src: <11-character video id>, alt: Gameplay of the Tractor VR simulator,
-#   poster: ../../assets/media/tractor-vr/poster.webp
+# Image hero until a gameplay video is on YouTube; then switch to kind: youtube with the 11-character id,
+# keep this file as `poster`, and add a { label: Gameplay video, kind: video } link.
 hero:
   kind: image
   src: ../../assets/media/tractor-vr/poster.webp
-  alt: TODO(Mara) cab view of the Tractor VR simulator
-# TODO(Mara): the gallery files are placeholders; replace them with real screenshots and describe each one.
+  alt: The green John Deere 6195M tractor on the farm track, beside two grain silos and a wooden gate
 gallery:
-  - { src: ../../assets/media/tractor-vr/gallery/01.webp, alt: "TODO(Mara): describe screenshot 1" }
-  - { src: ../../assets/media/tractor-vr/gallery/02.webp, alt: "TODO(Mara): describe screenshot 2" }
-  - { src: ../../assets/media/tractor-vr/gallery/03.webp, alt: "TODO(Mara): describe screenshot 3" }
-  - { src: ../../assets/media/tractor-vr/gallery/04.webp, alt: "TODO(Mara): describe screenshot 4" }
-  - { src: ../../assets/media/tractor-vr/gallery/05.webp, alt: "TODO(Mara): describe screenshot 5" }
-  - { src: ../../assets/media/tractor-vr/gallery/06.webp, alt: "TODO(Mara): describe screenshot 6" }
+  - { src: ../../assets/media/tractor-vr/gallery/01.webp, alt: The tractor pulling a blue plough across a field, leaving dark furrows }
+  - { src: ../../assets/media/tractor-vr/gallery/02.webp, alt: The tractor with a red front mower on a green meadow }
+  - { src: ../../assets/media/tractor-vr/gallery/03.webp, alt: A green tipping trailer raised behind the tractor, emptying its load onto the track }
+  - { src: ../../assets/media/tractor-vr/gallery/04.webp, alt: "Cab view during a tutorial lesson: the lesson panel on the left, the touch panel of cab controls on the right" }
+  - { src: ../../assets/media/tractor-vr/gallery/05.webp, alt: "The farmyard from above: barn, machine shed, two silos and the farmhouse around a concrete yard, fields and hills behind" }
+  - { src: ../../assets/media/tractor-vr/gallery/06.webp, alt: The tractor at dusk with its headlights and work lights on }
 ---
 import { Image } from 'astro:assets';
 import physicsGears from '../../assets/media/tractor-vr/physics-gears.webp';
@@ -42,55 +41,54 @@ The licensed tractor model is not included in the repository.
 
 ## Problem
 
-TODO(Mara): write in your own words
+A tractor simulator is only convincing if the machine behaves like one: it weighs 7.5 t, its wheels slip in mud, and the
+plough, the mower and the trailer change how it drives. I wanted all of that to run standalone on a Meta Quest 2, where a
+mobile GPU has 13.9 ms per frame at 72 Hz for the physics, a detailed cab and a 2 × 2 km landscape.
 
 ## What I built
 
-TODO(Mara): write in your own words
+You drive a John Deere 6195M from the cab, on a farm near Reghin, by day, at dusk or at night. The cab works: you grab the
+steering wheel, the speed lever and the hydraulic levers, press the console switches with a fingertip (or with hand
+tracking), and open the doors. Four implements hang on a working three-point hitch and front linkage: a plough that leaves
+furrows, a front mower that really cuts the meadow, a 900 kg front weight and a tipping trailer.
 
-Raw notes:
-
-- VR tractor simulator of a John Deere 6195M for Meta Quest 2.
-- Implements: plough, front mower, front weight, tipping trailer; three-point hitch, PTO.
-- Cab with grabbable steering wheel and levers, pressable switches, hand tracking.
-- 2 × 2 km world near Reghin, built from Blender assets generated by Python scripts (Full PC and Light Quest versions).
-- Tutorial: 9 self-checking lessons with 1–5 star ratings.
-- Three builds from one project: Quest standalone, PC VR over Link, PC desktop.
-- University project, Sapientia (IRUM).
+Free roam lets you explore. The tutorial teaches everything in nine self-checking lessons, each rated with one to five
+stars, from driving off to ploughing.
 
 ## Architecture
 
-TODO(Mara): write in your own words
+One Unity 6 project (URP, OpenXR) builds three versions: Quest standalone, PC VR streamed over Link, and a PC desktop
+version for a monitor. Two quality levels separate them: the PC level adds full-detail meshes and real shadows.
 
-Raw notes:
-
-- Unity 6000.6.3f1, URP, OpenXR, Input System, XR Hands.
-- One project, three build targets (Quest standalone, PC VR over Link, PC desktop).
-- World assets generated by Python scripts in Blender, exported in Full PC and Light Quest variants.
+Every environment asset, from the barn to the thousand trees, is modelled by a Python script in Blender and exported in a
+full (PC) and a light (Quest) variant, so the Quest version is rebuilt from the same source instead of hand-simplified. A
+built-in benchmark drives the same 60 s route in every version and writes its results to the repository.
 
 ## Physics
 
-TODO(Mara): write in your own words
+The tractor is a 7.5 t rigidbody on four raycast wheels, simulated at 90 Hz. Each tyre has a friction circle, so braking,
+steering and pulling share the same grip, and the ground decides how much grip there is: rolling resistance goes from
+0.015 on asphalt to 0.15 in mud. The drivetrain has 4WD, a differential lock and a 20F/20R gearbox, automatic or manual,
+driven by a torque curve.
 
-Raw notes:
+Every formula is written down, with its symbols and numbers, in the [physics document](https://github.com/BorbMaty/TractorVR/blob/main/docs/PHYSICS.md).
+An automatic driving test runs after every change to the vehicle; its measured curves sit in the same document, next to
+the ones the formulas predict.
 
-- 7.5 t rigidbody on four raycast wheels, physics at 90 Hz.
-- Tyre friction circle; per-surface grip (rolling resistance from asphalt 0.015 to mud 0.15).
-- 4WD, differential lock, 20F/20R gearbox (automatic or manual), torque curve.
-
-<Image src={physicsGears} alt="TODO(Mara): describe the gearbox / physics chart" widths={[480, 800, 1200]} sizes="(max-width: 860px) 100vw, 800px" />
+<Image src={physicsGears} alt="Gearbox chart: engine speed against road speed for all 20 gears, and a full-throttle run in automatic mode that shifts between 1300 and 1950 rpm up to 50 km/h" widths={[480, 800, 1200]} sizes="(max-width: 860px) 100vw, 800px" />
 
 ## Performance
 
-TODO(Mara): write in your own words
+On the Quest 2, the full world (farm, fields, about 1000 trees, real skies) runs at 70.9 fps on average at 72 Hz; 1.4 % of
+the frames go over budget, almost all of them in the cab view. The GPU needs 12.0 ms of the 13.9 ms frame. I measured
+every new part of the environment on the headset before keeping it: the landscape costs 1.2–1.5 ms wherever it is in view.
 
-Raw notes:
+Before the landscape, at phase 4, all three versions held their refresh rate for the whole drive:
 
-- Quest 2: 71.8 fps average at 72 Hz, 0.0 % of frames over budget, GPU 9.6 ms of a 13.9 ms budget.
-- PC VR: 89.7 fps average.
-
-<Image src={benchGpu} alt="TODO(Mara): describe the GPU benchmark chart" widths={[480, 800, 1200]} sizes="(max-width: 860px) 100vw, 800px" />
+<Image src={benchGpu} alt="GPU time per frame against the frame budget in the phase 4 benchmark: Quest 9.6 of 13.9 ms, PC VR 2.1 of 11.1 ms, PC desktop 2.0 of 6.9 ms" widths={[480, 800, 1200]} sizes="(max-width: 860px) 100vw, 800px" />
 
 ## What I learned
 
-TODO(Mara): write in your own words
+Measure on the target device, early and often. The Quest's frame budget decided more of the design than any feature list:
+the light asset variants and the density of the meadow grass came from benchmark runs. Generating
+assets by script made that affordable, because a change to one script updates both versions at once.
