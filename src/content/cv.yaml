@@ -1,0 +1,22 @@
+# Single source for /cv, /about, the contact section and cv.pdf.
+# Never invent facts here: unknowns stay TODO(Mara).
+name: Mara TODO(surname)
+headline: Software engineer — ML, XR, cloud
+location: TODO(Mara)
+email: TODO(Mara)
+links:
+  - { label: GitHub, href: "https://github.com/BorbMaty" }
+  - { label: LinkedIn, href: "TODO(Mara)" }
+summary: TODO(Mara) three-line bio; mention team work here.
+education:
+  - degree: BSc Computer Science
+    school: Sapientia Hungarian University of Transylvania
+    period: TODO(Mara)
+    details:
+      - "Thesis: 3D printing process monitoring and fault detection with artificial intelligence"
+skills:
+  - { group: TODO(Mara), items: [TODO(Mara)] }
+experience:
+  - { title: TODO(Mara), org: TODO(Mara), period: TODO(Mara), details: ["TODO(Mara): include team work"] }
+languages:
+  - { name: TODO(Mara), level: TODO(Mara) }

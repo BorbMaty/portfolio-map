@@ -1,0 +1,56 @@
+---
+title: PrinterMonitor
+slug: printer-monitor
+region: The Watchtower
+regionId: watchtower
+weight: flagship
+order: 2
+pitch: AI monitoring for 3D printers - three cameras, a cloud pipeline and a YOLOv8x model that flags 9 failure types.
+period: TODO(Mara)
+role: TODO(Mara)
+stack: [Python, YOLOv8x, Raspberry Pi 4B, MediaMTX, WebRTC, GCP Pub/Sub, Cloud Functions, Vertex AI, Firestore, Firebase Hosting, Terraform, Cloudflare Tunnel]
+metrics:
+  - { label: mAP50, value: 92.6 % }
+  - { label: Recall, value: 87.3 % }
+  - { label: Inference, value: ~23 ms/frame }
+  - { label: Failure classes, value: "9" }
+links:
+  - { label: Source code, href: "https://github.com/BorbMaty/3DPrinting-Failure-Detection", kind: repo }
+hero:
+  kind: image
+  src: ../../assets/media/printer-monitor/hero.webp
+  alt: TODO(Mara) architecture diagram of the monitoring pipeline
+---
+
+## Problem
+
+TODO(Mara): write in your own words
+
+Raw notes:
+
+- BA thesis: "3D printing process monitoring and fault detection with artificial intelligence".
+
+## What I built
+
+TODO(Mara): write in your own words
+
+Raw notes:
+
+- Raspberry Pi 4B with three USB cameras; MediaMTX converts RTSP to WebRTC; exposed through a Cloudflare tunnel.
+- YOLOv8x detecting 9 failure classes; email alerts; Firebase-hosted dashboard.
+- Dataset audit found augmentation duplicates and val/train leakage from video sequences; fixed with a group-aware split.
+
+## Architecture
+
+TODO(Mara): write in your own words
+
+Raw notes:
+
+- GCP Pub/Sub topics `frames-in` and `detections-out`.
+- Cloud Functions: Dispatcher, AlertManager.
+- Vertex AI endpoint serving YOLOv8x on a T4 GPU (europe-west1).
+- Firestore for state; infrastructure in Terraform.
+
+## What I learned
+
+TODO(Mara): write in your own words

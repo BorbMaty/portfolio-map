@@ -1,0 +1,46 @@
+---
+title: Solar System Digital Twin
+slug: solar-system
+region: The Observatory
+regionId: observatory
+weight: medium
+order: 3
+pitch: A digital twin prototype - a Unity solar system driven by live telemetry, on desktop and as a VR tabletop.
+period: TODO(Mara)
+role: TODO(Mara)
+stack: [Unity, C#, XR Interaction Toolkit, JSON, HTTP]
+metrics:
+  - { label: Telemetry poll interval, value: 0.5 s }
+  - { label: Status levels, value: ok / warning / fault }
+  - { label: Modes, value: Desktop + VR }
+links:
+  # TODO(Mara): replace with the repo URL once it is public
+  - { label: "TODO(Mara): repo link", href: "https://github.com/BorbMaty", kind: repo }
+hero:
+  kind: image
+  src: ../../assets/media/solar-system/hero.webp
+  alt: TODO(Mara) the solar system scene with status rings
+---
+
+## Problem
+
+TODO(Mara): write in your own words
+
+## What I built
+
+TODO(Mara): write in your own words
+
+Raw notes:
+
+- Unity scene built from a JSON description (`planets.json`).
+- Live HTTP telemetry polled every 0.5 s drives ok / warning / fault status on the orbit rings.
+- LIVE / OFFLINE indicator.
+- Desktop orbit camera and a VR tabletop mode (XR Interaction Toolkit), switched automatically; standalone build.
+
+## Architecture
+
+TODO(Mara): write in your own words
+
+## What I learned
+
+TODO(Mara): write in your own words
