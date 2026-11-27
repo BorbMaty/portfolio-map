@@ -1,22 +1,81 @@
 # Single source for /cv, /about, the contact section and cv.pdf.
-# Never invent facts here: unknowns stay TODO(Mara).
-name: Mara TODO(surname)
+# Never invent facts here: unknowns stay TODO(Mara). Source: Mara's CV (Hungarian PDF, 2026-11), translated.
+name: Mátyás-Levente Borbáth
 headline: Software engineer — ML, XR, cloud
-location: TODO(Mara)
-email: TODO(Mara)
+location: Târgu Mureș, Romania
+email: borb.maty@yahoo.com
 links:
   - { label: GitHub, href: "https://github.com/BorbMaty" }
   - { label: LinkedIn, href: "TODO(Mara)" }
-summary: TODO(Mara) three-line bio; mention team work here.
+summary: >-
+  Computer science graduate (BSc, Sapientia, 2026) and MSc student in advanced mechatronic systems. I build software
+  that sees, simulates and monitors the physical world: a cloud AI system that catches 3D printing failures (my thesis,
+  published at AMIRA 2026) and a VR tractor simulator for Meta Quest 2. I have taught programming to 7–18-year-olds
+  and led volunteer teams as lead organiser of the university's freshers' week.
 education:
+  - degree: MSc Advanced Mechatronic Systems
+    school: Sapientia Hungarian University of Transylvania, Târgu Mureș
+    period: Oct 2026 – present
+    details: []
   - degree: BSc Computer Science
-    school: Sapientia Hungarian University of Transylvania
-    period: TODO(Mara)
+    school: Sapientia Hungarian University of Transylvania, Târgu Mureș
+    period: Sep 2022 – Jul 2026
     details:
       - "Thesis: 3D printing process monitoring and fault detection with artificial intelligence"
+      - >-
+        Core courses: programming and software design; artificial intelligence; design and programming of
+        microprocessor systems; operating systems and computer architecture; computer networks
+  - degree: Baccalaureate
+    school: Reformed College (Református Kollégium), Sfântu Gheorghe
+    period: Sep 2018 – Jul 2022
+    details: []
+publications:
+  - title: Real-Time 3D Printing Process Monitoring and Fault Detection on Cloud-based Deep Learning
+    authors: Áron Fehér, Zoltán Szántó, Mátyás-Levente Borbáth
+    venue: AMIRA
+    year: "2026"
+    note: "Session: Data-driven Modelling of Engineering Systems / Drone Technologies and Industrial Applications"
+awards:
+  - { title: "MTDK student research conference: 1st prize", year: "2026" }
+  - { title: "Faculty student research conference (TDK): 2nd prize", year: "2026" }
+  - { title: "National student research conference (OTDK): nominated twice", year: "2026" }
 skills:
-  - { group: TODO(Mara), items: [TODO(Mara)] }
+  - { group: Programming, items: [C, C++, Python, Java, JavaScript, SQL, Bash, VHDL, MongoDB] }
+  - { group: AI / machine learning and cloud, items: [YOLOv8, computer vision, ML pipelines, Google Cloud, Terraform] }
+  - { group: LLMs / agents, items: [Claude Code, AI agents, prompt engineering, MCP] }
+  - { group: Networking, items: [IP camera surveillance, network design, field work] }
+  - group: Electronics
+    items: [analog and digital electronics, VHDL, microprocessor systems (university level, fundamentals)]
+  - { group: Hardware / fabrication, items: [Raspberry Pi, FDM 3D printing (PLA/PETG), Prusa Slicer, Bambu Slicer] }
+  - group: Tools
+    items: [Git, GitHub, Linux, VS Code, Unity, LaTeX, MS Office, Google Workspace, Sony Vegas Pro, Photoshop]
 experience:
-  - { title: TODO(Mara), org: TODO(Mara), period: TODO(Mara), details: ["TODO(Mara): include team work"] }
+  - title: Programming instructor
+    org: LogiScool, Târgu Mureș
+    period: Oct 2025 – Jun 2026
+    details:
+      - Weekly programming and digital-skills classes for ages 7–18, using LogiScool's certified curriculum
+      - Taught from visual, block-based programming up to text-based languages (Python, JavaScript)
+      - Adapted lesson plans to each group's level; built problem-solving and creative thinking
+  - title: Network and IT intern
+    org: ICCO Smart Solutions, Ghidfalău (Vidombák)
+    period: Jun 2024 (3 weeks)
+    details:
+      - Drew up and carried out network plans for IP camera surveillance systems
+      - Installed, configured and networked IP cameras on site
+volunteering:
+  - title: Member, Student Union
+    org: Sapientia Hungarian University of Transylvania, Târgu Mureș
+    period: Sep 2022 – present
+    details:
+      - Active member; volunteer at many university events
+      - Lead organiser of the 2023 and 2024 freshers' week, coordinating logistics, teams and schedules
+  - title: Scout
+    org: 115th Bölöni Farkas Sándor Scout Troop, Sfântu Gheorghe
+    period: Jun 2016 – 2022
+    details:
+      - Six years of teamwork, leadership and community service
 languages:
-  - { name: TODO(Mara), level: TODO(Mara) }
+  - { name: Hungarian, level: native }
+  - { name: English, level: B2 }
+  - { name: Romanian, level: B1 }
