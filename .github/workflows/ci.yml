@@ -22,7 +22,7 @@ jobs:
     env:
       SITE_URL: ${{ vars.SITE_URL }}
       # GitHub Release holding the terrain render the map tiles are cut from (ROADMAP 2.3: tiles are not in git).
-      TERRAIN_RELEASE: terrain-src-1
+      TERRAIN_RELEASE: terrain-src-2
     steps:
       - uses: actions/checkout@v4
 

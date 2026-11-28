@@ -26,24 +26,17 @@ interface Props {
 
 export default function MapIsland({ landmarks, width, height }: Props) {
   return (
-    <>
-      <div class="map-frame" style={{ aspectRatio: `${width} / ${height}` }}>
-        <img src="/map/preview.webp" alt="" width={width} height={height} loading="lazy" decoding="async" />
-        <ul class="map-landmarks">
-          {landmarks.map((l) => (
-            <li key={l.id} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
-              <a href={l.href} aria-label={`${l.name}: ${l.label}`}>
-                {l.name}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-      {/* Required by the Copernicus DEM licence for adapted data, wherever the terrain is shown. */}
-      <p class="map-credit">
-        Terrain produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH
-        2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved.
-      </p>
-    </>
+    <div class="map-frame" style={{ aspectRatio: `${width} / ${height}` }}>
+      <img src="/map/preview.webp" alt="" width={width} height={height} loading="lazy" decoding="async" />
+      <ul class="map-landmarks">
+        {landmarks.map((l) => (
+          <li key={l.id} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
+            <a href={l.href} aria-label={`${l.name}: ${l.label}`}>
+              {l.name}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

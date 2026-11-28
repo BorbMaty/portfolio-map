@@ -38,16 +38,8 @@
   color: var(--accent-text);
 }
 
-.map-credit {
-  margin: 0.4rem 0 0;
-  color: var(--muted);
-  font-size: 0.75rem;
-}
-
-/* The credit goes with the image: hidden together on small screens. */
 @media (max-width: 767px) {
-  .map-frame,
-  .map-credit {
+  .map-frame {
     display: none;
   }
 }
