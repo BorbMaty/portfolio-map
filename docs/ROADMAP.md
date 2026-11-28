@@ -34,8 +34,10 @@ Status: `[x]` done · `[ ]` open.
 
 ## Phase 2 — the map
 
-- [ ] **2.1 Terrain draft** — Copernicus GLO-30 DEM → Blender scene by script → low-res draft render
+- [x] **2.1 Terrain draft** (PR #18) — Copernicus GLO-30 DEM → Blender scene by script → low-res draft render
   (sources outside git, `tiles-src/`). *Gate:* one draft render approved.
+  Approved 2026-11-28: bbox 46.60–47.00 N, 24.40–25.05 E; exaggeration 2.5, tilt 25°. `terrain/` is a uv project
+  (rasterio, numpy); its tests are not in CI yet. Look (forest band, snow, edges) is left for 3.1.
 - [ ] **2.2 Tiles** — script cutting the render into deep-zoom WebP tiles. *Gate:* tiles rebuild from one command.
 - [ ] **2.3 Pan / zoom** — OpenSeadragon in `MapIsland`, landmark overlay from `regions.ts`.
   *Gate:* first map view < 800 KB; landmarks stay pinned while zooming. Exclude map tiles from the
