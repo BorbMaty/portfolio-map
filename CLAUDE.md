@@ -8,7 +8,8 @@ Full plan: `docs/PLAN.md`. Phases and gates: `docs/ROADMAP.md` (one PR per phase
 - Plain CSS with custom properties; two themes `day` (default) and `night`; no UI framework
 - One Preact island only: `src/map/MapIsland.tsx`
 - Playwright (PDF generation + smoke tests), Lighthouse CI in GitHub Actions
-- Hosting: Cloudflare Pages, static output, deployed from GitHub Actions with wrangler.
+- Hosting: Cloudflare Pages project `portfoliobml` (live: https://portfoliobml.pages.dev), static output, deployed
+  from GitHub Actions with `pnpm dlx wrangler` (not wrangler-action: it fails under pnpm 12).
   Site URL from env `SITE_URL`.
 - Package manager: pnpm. Ask before adding any dependency.
 
@@ -20,7 +21,7 @@ Full plan: `docs/PLAN.md`. Phases and gates: `docs/ROADMAP.md` (one PR per phase
 - Project images go in `src/assets/media/<slug>/` (not `public/`) so `astro:assets` makes AVIF/WebP + srcset.
 - Never invent CV facts (dates, employers, emails, skill levels). Unknowns are `TODO(Mara)`.
 - Commits: Conventional Commits `type(scope): message`. No Claude co-author trailers.
-- Every task ends with `pnpm build && pnpm test` green.
+- Every task ends with `pnpm build:all && pnpm test` green (`build:all` also makes `cv.pdf`, which the tests need).
 
 ## Performance budget
 - Landing page < 300 KB transferred before the map image.
