@@ -43,7 +43,7 @@ to `tiles-src/`, which is not versioned. Needs [uv](https://docs.astral.sh/uv/) 
 cd terrain && uv run fetch_dem.py                  # download DEM tiles (~85 MB once), write heightmap.png/.json
 cd .. && blender -b -P terrain/scene.py            # render tiles-src/draft.png (~10 s)
 blender -b -P terrain/scene.py -- --exaggeration 3 --tilt 30 --save   # tweak; --save keeps terrain.blend
-blender -b -P terrain/scene.py -- --size 4096 --out render.png  # full render for the tiles
+blender -b -P terrain/scene.py -- --size 4096 --out render.png  # tile source (8192 px in 3.1)
 pnpm tiles                                         # tiles-src/render.png -> public/map/terrain.dzi + WebP tiles
 cd terrain && uv run pytest                        # tests for the crop and tiling maths
 ```

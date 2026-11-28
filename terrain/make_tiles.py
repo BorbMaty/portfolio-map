@@ -37,6 +37,12 @@ def level_sizes(width_px: int, height_px: int) -> list[tuple[int, int]]:
     The top level is the full image; each level below is half the size, odd sizes rounded up,
     until the longer side is 1 px. So there are ceil(log2(longest side)) + 1 levels.
 
+    Args:
+        width_px, height_px: full image size in px.
+
+    Returns:
+        (width_px, height_px) per level, index = DZI level number.
+
     Raises:
         ValueError: if a side is not positive.
     """
@@ -50,7 +56,15 @@ def level_sizes(width_px: int, height_px: int) -> list[tuple[int, int]]:
 
 
 def tile_grid(width_px: int, height_px: int, tile_px: int = TILE_PX) -> tuple[int, int]:
-    """Number of tile columns and rows that cover one level."""
+    """Number of tile columns and rows that cover one level.
+
+    Args:
+        width_px, height_px: level size in px.
+        tile_px: tile edge in px, without overlap.
+
+    Returns:
+        (columns, rows).
+    """
     return math.ceil(width_px / tile_px), math.ceil(height_px / tile_px)
 
 
@@ -61,6 +75,15 @@ def tile_box(
 
     Each tile covers its tile_px square plus overlap_px on every side that has a neighbour,
     clipped to the level edge (same as the reference deepzoom.py / vips dzsave).
+
+    Args:
+        col, row: tile index within the level.
+        width_px, height_px: level size in px.
+        tile_px: tile edge in px, without overlap.
+        overlap_px: overlap in px added on each inner side.
+
+    Returns:
+        (left, top, right, bottom) in px, right/bottom exclusive (PIL crop convention).
     """
     left = col * tile_px - (overlap_px if col > 0 else 0)
     top = row * tile_px - (overlap_px if row > 0 else 0)
@@ -82,12 +105,16 @@ def write_tiles(src: Path, out_dir: Path, quality: int) -> int:
 
     Raises:
         FileNotFoundError: if src does not exist.
+        OSError: if old tiles cannot be removed (e.g. a file is held open on Windows).
     """
     image = Image.open(src).convert("RGB")  # renders may carry an alpha channel; tiles do not need it
     sizes = level_sizes(*image.size)
     files_dir = out_dir / "terrain_files"
-    # Start clean so tiles from an older, larger render cannot linger.
-    shutil.rmtree(files_dir, ignore_errors=True)
+    # Start clean so tiles from an older, larger render cannot linger. The .dzi goes first and is
+    # written last, so a run that fails half-way never leaves a .dzi describing missing tiles.
+    (out_dir / "terrain.dzi").unlink(missing_ok=True)
+    if files_dir.exists():
+        shutil.rmtree(files_dir)  # no ignore_errors: a locked file must fail loudly, not leave a half-deleted pyramid
 
     count = 0
     level_img = image
@@ -120,9 +147,11 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=ROOT / "public" / "map")
     parser.add_argument("--quality", type=int, default=80, help="WebP quality 0-100 (lower = smaller tiles)")
     args = parser.parse_args()
+    if not 0 <= args.quality <= 100:
+        parser.error(f"--quality must be 0-100, got {args.quality}")
     if not args.src.exists():
         parser.error(
-            f"{args.src} not found: render it with `blender -b -P terrain/scene.py -- --size 8192 --out render.png`"
+            f"{args.src} not found: render it with `blender -b -P terrain/scene.py -- --size 4096 --out render.png`"
         )
 
     args.out.mkdir(parents=True, exist_ok=True)

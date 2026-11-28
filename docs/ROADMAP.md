@@ -41,6 +41,8 @@ Status: `[x]` done · `[ ]` open.
 - [ ] **2.2 Tiles** — script cutting the render into deep-zoom WebP tiles. *Gate:* tiles rebuild from one command.
 - [ ] **2.3 Pan / zoom** — OpenSeadragon in `MapIsland`, landmark overlay from `regions.ts`. Mara places each
   landmark on the draft terrain (real `x`/`y` in `regions.ts`); the 3D models in 3.1 go on the same spots.
+  Tiles are not in git: the render is a GitHub Release asset (decided 2026-11-28), and CI downloads it and runs
+  `pnpm tiles` before the build, so the deploy has them. CI also runs the `terrain/` tests from here on.
   *Gate:* first map view < 800 KB; landmarks stay pinned while zooming. Exclude map tiles from the
   landing `resource-summary` budget in `lighthouserc.json` (it counts everything since 1.1).
 - [ ] **2.4 Fly-to + panel** — landmark click animates the view and opens `ProjectPanel`; `/projects/<slug>`
