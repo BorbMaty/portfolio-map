@@ -7,6 +7,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { isDraftSource } from '../src/lib/draft.ts';
+import { FOCUS_X, regions } from '../src/map/regions.ts';
 
 // Minimal frontmatter read: only slug and draft are needed, and both are plain one-line scalars.
 const projectDir = new URL('../src/content/projects/', import.meta.url);
@@ -343,11 +344,22 @@ for (const slug of published) {
   });
 }
 
+test('every region zooms enough to sit at FOCUS_X without hitting the map edge', () => {
+  // Drafts included: a project that comes out of draft must not open with its landmark under the panel.
+  for (const r of regions) {
+    expect(r.x + (1 - FOCUS_X) / r.zoom, r.id).toBeLessThanOrEqual(1);
+    expect(r.x - FOCUS_X / r.zoom, r.id).toBeGreaterThanOrEqual(0);
+  }
+});
+
 test('clicking a landmark on the landing map flies there and opens its project', async ({ page }) => {
   await openLiveMap(page);
   const link = page.locator('.map-landmarks a[href^="/projects/"]').first();
   const href = (await link.getAttribute('href'))!;
+  const before = (await link.boundingBox())!;
   await link.click();
+  // The flight: the landmark moves across the screen before the new page loads (plain navigation would not).
+  await expect.poll(async () => (await link.boundingBox())?.x ?? before.x).not.toBeCloseTo(before.x, 0);
   await expect(page).toHaveURL(new RegExp(`${href}$`), { timeout: 5_000 });
   await expect(page.locator('.project-scroll .panel h1')).toBeVisible();
 });

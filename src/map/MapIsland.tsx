@@ -8,6 +8,7 @@
  */
 import { useEffect, useRef } from 'preact/hooks';
 import type OpenSeadragon from 'openseadragon';
+import { FOCUS_X } from './regions';
 import './map.css';
 
 export interface Landmark {
@@ -35,12 +36,10 @@ interface Props {
 /** Zoom factor of one button press. */
 const ZOOM_STEP = 1.6;
 
-/** Where a focused landmark sits across the frame (0-1): left of centre, clear of the project panel on the right. */
-const FOCUS_X = 0.3;
-
 /** Longest a flight may take before the link is followed anyway (animation 1.2 s plus margin), in ms. */
 const FLIGHT_TIMEOUT_MS = 1600;
 
+/** True when the visitor asked the OS for less motion: no flights, no animated zoom. */
 const prefersReducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export default function MapIsland({ landmarks, width, height, focusId }: Props) {
@@ -48,6 +47,8 @@ export default function MapIsland({ landmarks, width, height, focusId }: Props) 
   const viewerEl = useRef<HTMLDivElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const viewer = useRef<OpenSeadragon.Viewer | null>(null);
+  // The latest clicked landmark's link and its fallback timer: a second click retargets the flight.
+  const flight = useRef<{ href: string; timer: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,19 +81,29 @@ export default function MapIsland({ landmarks, width, height, focusId }: Props) 
       // Landmarks stay in their own list (accessible, owned by Preact); on every frame drawn, each marker moves
       // to the screen pixel of its map point.
       const items = Array.from(list.current?.querySelectorAll<HTMLLIElement>('li') ?? []);
+      // Landmarks outside the visible frame become inert: no invisible tab stops.
       const place = () => {
+        const w = v.container.clientWidth;
+        const h = v.container.clientHeight;
         items.forEach((li, i) => {
           const point = v.viewport.imageToViewportCoordinates(landmarks[i].x * width, landmarks[i].y * height);
           const px = v.viewport.pixelFromPoint(point, true);
           li.style.left = `${px.x}px`;
           li.style.top = `${px.y}px`;
+          li.inert = px.x < 0 || px.y < 0 || px.x > w || px.y > h;
         });
       };
       v.addHandler('update-viewport', place);
       v.addHandler('open', () => {
         const focus = landmarks.find((l) => l.id === focusId);
-        if (focus) show(v, focus, true);
         frame.current?.classList.add('is-live');
+        if (focus) {
+          show(v, focus, true);
+          // The preview shows the whole map, which no longer matches the zoomed labels: drop it now and let the
+          // low-resolution tiles (they arrive first) fill in.
+          frame.current?.classList.add('is-loaded');
+          return;
+        }
         // Keep the preview underneath until the first full view is drawn, so there is no blank flash.
         v.world.getItemAt(0).addOnceHandler('fully-loaded-change', () => frame.current?.classList.add('is-loaded'));
       });
@@ -104,7 +115,13 @@ export default function MapIsland({ landmarks, width, height, focusId }: Props) 
     };
   }, []);
 
-  /** Zoom onto a landmark and place it at FOCUS_X across the frame (OpenSeadragon clamps it near the map edges). */
+  /**
+   * Zoom onto a landmark and place it at FOCUS_X across the frame (regions.ts keeps every landmark's zoom high
+   * enough for that to fit inside the map).
+   * @param v the viewer
+   * @param l the landmark
+   * @param immediately jump instead of animating (opening a project page)
+   */
   const show = (v: OpenSeadragon.Viewer, l: Landmark, immediately: boolean) => {
     // Viewport width is 1 at zoom 1, so at zoom z the view spans 1/z: shift the centre right by (0.5 - FOCUS_X)/z,
     // written in image pixels (the viewport's x unit is the image width).
@@ -114,20 +131,30 @@ export default function MapIsland({ landmarks, width, height, focusId }: Props) 
     v.viewport.applyConstraints(immediately);
   };
 
-  /** Landmark click: fly there, then follow the link. Modified clicks keep normal link behaviour (new tab etc.). */
+  /**
+   * Landmark click: fly there, then follow the link. Plain link behaviour stays for modified clicks (new tab etc.),
+   * reduced motion, and links to the page already open (own project page, or the Harbor's /#contact on the landing
+   * page), where a flight would go nowhere or leave the map zoomed.
+   * @param e the click
+   * @param l the clicked landmark
+   */
   const fly = (e: MouseEvent, l: Landmark) => {
     const v = viewer.current;
     if (!v || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || prefersReducedMotion()) return;
+    if (new URL(l.href, location.href).pathname === location.pathname) return;
     e.preventDefault();
-    let gone = false;
+    // Only the latest click counts: retarget a running flight instead of racing it.
+    if (flight.current) clearTimeout(flight.current.timer);
     const go = () => {
-      if (gone) return;
-      gone = true;
-      location.assign(l.href);
+      const target = flight.current;
+      if (!target) return;
+      flight.current = null;
+      clearTimeout(target.timer);
+      location.assign(target.href);
     };
     // animation-finish never fires if the view is already there, hence the timeout as well.
+    flight.current = { href: l.href, timer: window.setTimeout(go, FLIGHT_TIMEOUT_MS) };
     v.addOnceHandler('animation-finish', go);
-    setTimeout(go, FLIGHT_TIMEOUT_MS);
     show(v, l, false);
   };
 

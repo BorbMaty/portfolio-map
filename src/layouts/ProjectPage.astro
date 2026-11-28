@@ -27,19 +27,21 @@ const focusId = regions.find((r) => r.projectSlug === slug)?.id;
 
 <Base title={title} description={pitch} image={ogImage}>
   <div class="project-view wrap">
-    <MapIsland client:visible landmarks={landmarks} width={mapSize.width} height={mapSize.height} focusId={focusId} />
+    {/* Panel first in the DOM: keyboard and screen-reader users reach the project before the map's controls. */}
     <div class="project-scroll">
       <a class="panel-close" href="/#map" aria-label="Close the project and return to the map">×</a>
-      <ProjectPanel project={project}>
+      <ProjectPanel project={project} heroSizes="(min-width: 768px) 30rem, 100vw">
         <slot />
       </ProjectPanel>
     </div>
+    <MapIsland client:visible landmarks={landmarks} width={mapSize.width} height={mapSize.height} focusId={focusId} />
   </div>
 </Base>
 
 <style>
   .project-view {
     position: relative;
+    overflow-x: clip; /* the panel's slide-in starts 2rem to the right; no horizontal scrollbar meanwhile */
   }
   .panel-close {
     display: none;
@@ -61,6 +63,7 @@ const focusId = regions.find((r) => r.projectSlug === slug)?.id;
       border-left: 1px solid var(--border);
       border-radius: 0 var(--radius) var(--radius) 0;
       box-shadow: -4px 0 16px rgb(0 0 0 / 0.25);
+      z-index: 1; /* above the map, which now comes later in the DOM */
       animation: unroll 0.35s ease-out;
     }
     .panel-close {

@@ -7,6 +7,16 @@
  * the render and writes tiles-src/landmarks.json; copy the values here after a new render. The Keep is not generated
  * (phase "Later"); its spot on the western islet is set by hand.
  */
+
+/**
+ * Where a focused landmark sits across the map frame (0-1) on its project page: left of centre, clear of the panel
+ * over the right side. At zoom z the view spans 1/z of the map width, so the landmark can only sit there if
+ * x - FOCUS_X / z >= 0 and x + (1 - FOCUS_X) / z <= 1; otherwise OpenSeadragon clamps the view and the landmark
+ * slides under the panel. Near the edges that needs a higher `zoom` (the Observatory). tests/smoke.spec.ts checks
+ * every region.
+ */
+export const FOCUS_X = 0.3;
+
 export interface Region {
   id: string;
   name: string;
@@ -23,7 +33,7 @@ export const regions: Region[] = [
   { id: 'watchtower', name: 'The Watchtower', projectSlug: 'printer-monitor', x: 0.704, y: 0.349, zoom: 3 },
   { id: 'homestead', name: 'The Homestead', projectSlug: 'tractor-vr', x: 0.643, y: 0.641, zoom: 3 },
   { id: 'harvest-fields', name: 'Harvest Fields', projectSlug: 'agriculture-cnn', x: 0.357, y: 0.628, zoom: 3 },
-  { id: 'observatory', name: 'The Observatory', projectSlug: 'solar-system', x: 0.847, y: 0.105, zoom: 3 },
+  { id: 'observatory', name: 'The Observatory', projectSlug: 'solar-system', x: 0.847, y: 0.105, zoom: 5 },
   { id: 'capital', name: 'Capital', href: '/about/', x: 0.52, y: 0.547, zoom: 2 },
   { id: 'village', name: 'Village', projectSlug: 'sapi-foglalo', x: 0.265, y: 0.32, zoom: 3 },
   { id: 'harbor', name: 'Harbor', href: '/#contact', x: 0.531, y: 0.791, zoom: 2 },
