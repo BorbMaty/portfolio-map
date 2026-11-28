@@ -83,9 +83,9 @@ The map is the experience, but never the only door: a recruiter must reach the C
    ("Software engineer — ML, XR, cloud"), the one-line story, and three buttons: *Explore the map · View CV ·
    Contact*. The two flagships glow and pulse.
 2. **Map mode (desktop):** pan with drag, zoom with buttons, double-click or pinch (the wheel keeps scrolling the
-   page, decided 2026-11-28); click a landmark → the camera flies to it
-   and a scroll panel unrolls from the right with the project page. Hover shows a short tooltip (name + one
-   line). Keyboard: Tab between landmarks, Enter opens, Esc closes. A small legend and a "quest log" list of
+   page, decided 2026-11-28); click a landmark → the camera flies to it, then the project page opens with a
+   cross-fade (project pages show only the project, no map: decided 2026-11-28, it reads more professionally).
+   Hover shows a short tooltip (name + one line). Keyboard: Tab between landmarks, Enter opens. A small legend and a "quest log" list of
    all regions for anyone who'd rather click a list.
 3. **Plain mode (`/cv`):** a normal, ATS-friendly one-column CV page with the same content, plus a PDF
    download. Toggle in the header on every page.
@@ -93,7 +93,7 @@ The map is the experience, but never the only door: a recruiter must reach the C
    a stop with a card that opens the project page.
 
 **Every project has its own URL** (`/projects/tractor-vr`), so links in a CV, a LinkedIn post or an email open
-straight onto that project — the map behind it, panel open.
+straight onto that project.
 
 **Accessibility:** `prefers-reduced-motion` turns off the fly-to and fog animations; text contrast ≥ 4.5:1 on
 parchment; every landmark has an accessible name.
@@ -107,8 +107,8 @@ A static site: no server, near-zero running cost, fast everywhere.
 | Framework  | Astro + TypeScript                                                                                  | Static HTML per page (good SEO, fast first paint); interactive map as one island                      |
 | Map        | Blender-rendered terrain as deep-zoom raster tiles + HTML/SVG overlay for labels, landmarks and fog | Realistic look; tiles load only what's on screen; landmarks stay DOM elements (clickable, accessible) |
 | Pan / zoom | `OpenSeadragon` (or `Leaflet CRS.Simple`)                                                           | Built for deep-zoom tiles with HTML overlays; touch-aware                                             |
-| Animation  | GSAP (fly-to, scroll unroll, fog reveal)                                                            | Smooth, respects reduced motion with a flag                                                           |
-| Content    | Markdown/MDX per project in Astro content collections                                               | Edit text without touching code; same source feeds map panels, `/cv` and project URLs                 |
+| Animation  | OpenSeadragon viewport animation (fly-to) + CSS view transitions between pages; no GSAP            | Smooth, no extra JS; both off with reduced motion                                                     |
+| Content    | Markdown/MDX per project in Astro content collections                                               | Edit text without touching code; same source feeds project pages, `/cv` and the map's landmarks        |
 | CV PDF     | Generated from the same content at build time (Playwright print of `/cv`)                           | One source of truth, never out of date                                                                |
 | Styling    | CSS variables + a little Tailwind or plain CSS                                                      | Two themes (parchment / night)                                                                        |
 | Hosting    | Cloudflare Pages (or GitHub Pages)                                                                  | Free, global CDN, preview deploy per branch                                                           |
@@ -126,7 +126,7 @@ Lighthouse ≥ 90 on mobile. Project images as AVIF/WebP with `srcset`.
 **Routes:**
 
 - `/` — landing banner + map
-- `/projects/<slug>` — map with that project's panel open (static page, shareable)
+- `/projects/<slug>` — the project page (static, shareable; no map)
 - `/cv` — plain CV page; `/cv.pdf` — generated PDF
 - `/about` — Capital panel as a page
 - `/404` — "Here be dragons" page with a link home
@@ -144,7 +144,6 @@ src/
     realm.svg        layered map art (terrain, rivers, labels)
     regions.ts       region id → landmark position, project slug, zoom level
     MapIsland.tsx    pan/zoom, fly-to, fog of war, keyboard nav
-    ScrollPanel.tsx  the unrolling project panel
   components/        Banner, StackChips, MetricRow, VideoPoster, ThemeToggle, JourneyPath (mobile)
   layouts/           Base.astro, ProjectPage.astro, CvPage.astro
   pages/             index.astro, projects/[slug].astro, cv.astro, about.astro, 404.astro

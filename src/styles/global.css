@@ -28,6 +28,18 @@
   color-scheme: dark;
 }
 
+/* Cross-document view transitions: the browser holds the old page until the new one is ready, then cross-fades,
+   so following a link (e.g. the map's flight into a project) shows no blank flash. No JS; browsers without support
+   navigate as before. */
+@view-transition {
+  navigation: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
 :root {
   --font-display: 'Cinzel', Georgia, serif;
   --font-body: 'Inter Variable', system-ui, sans-serif;
