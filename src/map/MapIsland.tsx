@@ -117,8 +117,8 @@ export default function MapIsland({ landmarks, width, height }: Props) {
 
   /**
    * Landmark click: fly there, then follow the link. Plain link behaviour stays for modified clicks (new tab etc.),
-   * reduced motion, and links to the page already open (own project page, or the Harbor's /#contact on the landing
-   * page), where a flight would go nowhere or leave the map zoomed.
+   * reduced motion, and a link to the page already open (the Harbor's /#contact on the landing page), where a
+   * flight would only leave the map zoomed.
    * @param e the click
    * @param l the clicked landmark
    */
