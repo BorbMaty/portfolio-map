@@ -9,7 +9,8 @@
     "build:pdf": "node scripts/build-cv-pdf.ts",
     "build:all": "pnpm build && pnpm build:pdf",
     "preview": "astro preview",
-    "test": "playwright test"
+    "test": "playwright test",
+    "tiles": "uv run --project terrain terrain/make_tiles.py"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.1.6",

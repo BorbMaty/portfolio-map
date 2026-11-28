@@ -1,10 +1,10 @@
 """Build the terrain scene from tiles-src/heightmap.png and render a draft.
 
 Run inside Blender (needs bpy, so not part of the uv project):
-  blender -b -P terrain/scene.py -- [--exaggeration 2.5] [--size 1024] [--tilt 25] [--save]
+  blender -b -P terrain/scene.py -- [--exaggeration 2.5] [--size 1024] [--tilt 25] [--out draft.png] [--save]
 
 Scale: 1 Blender unit = 1 km, so the camera and light numbers read as real distances.
-Output: tiles-src/draft.png (and tiles-src/terrain.blend with --save).
+Output: tiles-src/draft.png or --out name (and tiles-src/terrain.blend with --save).
 """
 
 from __future__ import annotations
@@ -28,13 +28,14 @@ def parse_args() -> argparse.Namespace:
     """Read the options after Blender's `--` separator.
 
     Returns:
-        Namespace with exaggeration (factor), size (px), tilt (degrees) and save (bool).
+        Namespace with exaggeration (factor), size (px), tilt (degrees), out (file name) and save (bool).
     """
     argv = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     p = argparse.ArgumentParser(prog="scene.py")
     p.add_argument("--exaggeration", type=float, default=2.5, help="vertical scale factor")
     p.add_argument("--size", type=int, default=1024, help="render width and height in px")
     p.add_argument("--tilt", type=float, default=25.0, help="camera angle from straight down, degrees")
+    p.add_argument("--out", default="draft.png", help="output file name inside tiles-src/")
     p.add_argument("--save", action="store_true", help="also save terrain.blend for manual tweaking")
     return p.parse_args(argv)
 
@@ -197,7 +198,7 @@ def main() -> None:
     scene.render.engine = "BLENDER_EEVEE"
     scene.render.resolution_x = scene.render.resolution_y = args.size
     scene.render.image_settings.file_format = "PNG"
-    scene.render.filepath = str(SRC / "draft.png")
+    scene.render.filepath = str(SRC / args.out)
     bpy.ops.render.render(write_still=True)
     if args.save:
         bpy.ops.wm.save_as_mainfile(filepath=str(SRC / "terrain.blend"))

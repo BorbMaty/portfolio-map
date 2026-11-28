@@ -26,6 +26,8 @@ Thumbs.db
 # Blender backups and raw map sources (phase 2: tiles are generated, not versioned here)
 *.blend1
 tiles-src/
+public/map/terrain.dzi
+public/map/terrain_files/
 
 # The plan PDF is the original export; docs/PLAN.md is the versioned copy
 docs/*.pdf
