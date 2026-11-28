@@ -4,10 +4,12 @@ import Base from '../layouts/Base.astro';
 import { cvPdfName, getCv, getProjects, isEmail, isUrl } from '../lib/content';
 
 import MapIsland, { type Landmark } from '../map/MapIsland';
+import { readMapImageSize } from '../map/mapImage';
 import { regions } from '../map/regions';
 
 const cv = await getCv();
 const projects = await getProjects();
+const mapSize = readMapImageSize();
 
 // Only regions that lead somewhere get a landmark: published projects, or a fixed href (Capital, Harbor).
 const landmarks: Landmark[] = regions.flatMap((r) => {
@@ -44,8 +46,8 @@ const cardWidths = [320, 660, 990, 1320];
   <section id="map" class="wrap" aria-labelledby="map-heading">
     <h2 id="map-heading">The map</h2>
     <p class="map-mobile-note">The map is made for larger screens. Every region is in the <a href="#projects">quest log</a> below.</p>
-    {/* No client directive: phase 1 renders the map as static HTML, no JS until OpenSeadragon (phase 2.3). */}
-    <MapIsland landmarks={landmarks} />
+    {/* No client directive: the map is static HTML until OpenSeadragon arrives (phase 2.3c). */}
+    <MapIsland landmarks={landmarks} width={mapSize.width} height={mapSize.height} />
   </section>
 
   <section id="projects" class="wrap" aria-labelledby="quest-log">

@@ -1,6 +1,7 @@
 """Cut a terrain render into Deep Zoom (DZI) WebP tiles for OpenSeadragon.
 
-Writes <out>/terrain.dzi (XML metadata) and <out>/terrain_files/<level>/<col>_<row>.webp.
+Writes <out>/terrain.dzi (XML metadata), <out>/terrain_files/<level>/<col>_<row>.webp, and
+<out>/preview.webp: one small image of the whole map, shown before the viewer loads and without JS.
 Format reference: https://github.com/openseadragon/openseadragon/wiki/The-DZI-File-Format
 
 Usage: uv run --project terrain terrain/make_tiles.py [render.png] [--out public/map] [--quality 80]
@@ -23,6 +24,9 @@ ROOT = Path(__file__).resolve().parents[1]
 # 254 + 1 px overlap on both sides = 256 px for inner tiles, the DZI convention (power-of-two tiles).
 TILE_PX = 254
 OVERLAP_PX = 1
+
+# Longest side of preview.webp: sharp at the map's ~1000 px CSS width, small enough for the landing budget.
+PREVIEW_MAX_PX = 1024
 
 DZI_XML = """<?xml version="1.0" encoding="UTF-8"?>
 <Image xmlns="http://schemas.microsoft.com/deepzoom/2008" Format="webp" Overlap="{overlap}" TileSize="{tile}">
@@ -93,7 +97,7 @@ def tile_box(
 
 
 def write_tiles(src: Path, out_dir: Path, quality: int) -> int:
-    """Write terrain.dzi and every tile of every level.
+    """Write terrain.dzi, preview.webp and every tile of every level.
 
     Args:
         src: render image (PNG).
@@ -110,9 +114,11 @@ def write_tiles(src: Path, out_dir: Path, quality: int) -> int:
     image = Image.open(src).convert("RGB")  # renders may carry an alpha channel; tiles do not need it
     sizes = level_sizes(*image.size)
     files_dir = out_dir / "terrain_files"
+    out_dir.mkdir(parents=True, exist_ok=True)
     # Start clean so tiles from an older, larger render cannot linger. The .dzi goes first and is
     # written last, so a run that fails half-way never leaves a .dzi describing missing tiles.
     (out_dir / "terrain.dzi").unlink(missing_ok=True)
+    (out_dir / "preview.webp").unlink(missing_ok=True)
     if files_dir.exists():
         shutil.rmtree(files_dir)  # no ignore_errors: a locked file must fail loudly, not leave a half-deleted pyramid
 
@@ -123,6 +129,9 @@ def write_tiles(src: Path, out_dir: Path, quality: int) -> int:
         w, h = sizes[level]
         if level_img.size != (w, h):
             level_img = level_img.resize((w, h), Image.Resampling.LANCZOS)
+        # The first level that fits is the preview: reuses the pyramid instead of a separate resize.
+        if max(w, h) <= PREVIEW_MAX_PX and not (out_dir / "preview.webp").exists():
+            level_img.save(out_dir / "preview.webp", "WEBP", quality=quality, method=6)
         level_dir = files_dir / str(level)
         level_dir.mkdir(parents=True)
         cols, rows = tile_grid(w, h)
@@ -154,7 +163,6 @@ def main() -> None:
             f"{args.src} not found: render it with `blender -b -P terrain/scene.py -- --size 4096 --out render.png`"
         )
 
-    args.out.mkdir(parents=True, exist_ok=True)
     count = write_tiles(args.src, args.out, args.quality)
     size_b = sum(p.stat().st_size for p in (args.out / "terrain_files").rglob("*.webp"))
     log.info("wrote %d tiles (%.1f MB) to %s", count, size_b / 1e6, args.out)
