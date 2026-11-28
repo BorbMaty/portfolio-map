@@ -38,6 +38,12 @@ Status: `[x]` done · `[ ]` open.
   (sources outside git, `tiles-src/`). *Gate:* one draft render approved.
   Approved 2026-11-28: bbox 46.60–47.00 N, 24.40–25.05 E; exaggeration 2.5, tilt 25°. `terrain/` is a uv project
   (rasterio, numpy); its tests are not in CI yet. Look (forest band, snow, edges) is left for 3.1.
+  Replaced by 2.1b (decided 2026-11-28: a fictional coast instead of real elevation data).
+- [ ] **2.1b Fictional coast** — generated heightmap (`gen_island.py`, numpy only) with sea, shore and a river;
+  landmarks placed by the generator, their render positions computed by `scene.py`. DEM code and rasterio
+  removed. *Gate:* one draft approved (seed 21 chosen 2026-11-28). The follow-up PR renders it to Release
+  `terrain-src-2`, points CI at it, removes the Copernicus credit and writes the positions into `regions.ts`
+  (2.3b becomes a check of the generated spots).
 - [x] **2.2 Tiles** (PR #21) — script cutting the render into deep-zoom WebP tiles. *Gate:* tiles rebuild from one command.
   `pnpm tiles` (Pillow, DZI: 254 px tiles, 1 px overlap). Test render 4096 px: 416 tiles, 0.7 MB, 13 levels.
 - [ ] **2.3 Pan / zoom** — OpenSeadragon in `MapIsland`, landmark overlay from `regions.ts`. Mara places each
