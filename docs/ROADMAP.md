@@ -38,7 +38,8 @@ Status: `[x]` done · `[ ]` open.
   (sources outside git, `tiles-src/`). *Gate:* one draft render approved.
   Approved 2026-11-28: bbox 46.60–47.00 N, 24.40–25.05 E; exaggeration 2.5, tilt 25°. `terrain/` is a uv project
   (rasterio, numpy); its tests are not in CI yet. Look (forest band, snow, edges) is left for 3.1.
-- [ ] **2.2 Tiles** — script cutting the render into deep-zoom WebP tiles. *Gate:* tiles rebuild from one command.
+- [x] **2.2 Tiles** (PR #21) — script cutting the render into deep-zoom WebP tiles. *Gate:* tiles rebuild from one command.
+  `pnpm tiles` (Pillow, DZI: 254 px tiles, 1 px overlap). Test render 4096 px: 416 tiles, 0.7 MB, 13 levels.
 - [ ] **2.3 Pan / zoom** — OpenSeadragon in `MapIsland`, landmark overlay from `regions.ts`. Mara places each
   landmark on the draft terrain (real `x`/`y` in `regions.ts`); the 3D models in 3.1 go on the same spots.
   Tiles are not in git: the render is a GitHub Release asset (decided 2026-11-28), and CI downloads it and runs
