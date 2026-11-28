@@ -3,21 +3,14 @@ import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import { cvPdfName, getCv, getProjects, isEmail, isUrl } from '../lib/content';
 
-import MapIsland, { type Landmark } from '../map/MapIsland';
+import MapIsland from '../map/MapIsland';
+import { getLandmarks } from '../map/landmarks';
 import { readMapImageSize } from '../map/mapImage';
-import { regions } from '../map/regions';
 
 const cv = await getCv();
 const projects = await getProjects();
 const mapSize = readMapImageSize();
-
-// Only regions that lead somewhere get a landmark: published projects, or a fixed href (Capital, Harbor).
-const landmarks: Landmark[] = regions.flatMap((r) => {
-  const project = projects.find((p) => p.data.slug === r.projectSlug);
-  if (project) return [{ ...r, label: project.data.title, href: `/projects/${project.data.slug}/` }];
-  if (r.href) return [{ ...r, label: r.id === 'capital' ? 'About' : 'Contact', href: r.href }];
-  return [];
-});
+const landmarks = await getLandmarks();
 
 // Quest-log image slot widths; `sizes` must be at least the rendered width, or the browser picks a source that is too
 // small and upscales it (blurry). The grid (16rem min columns, page max 68rem = 1088 px) has 3 columns from 840 px:

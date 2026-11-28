@@ -1,23 +1,106 @@
 ---
 /**
- * Standalone, shareable project page: the site shell plus the project panel with its own OG tags.
- * Phase 2 renders the same panel over the map.
+ * Shareable project page: the map, opened on the project's landmark, with the project panel over its right side
+ * (desktop). Below 768 px the map is hidden and the panel is the page. Without JS the panel still reads in full.
  * Props: project — a `projects` collection entry; the rendered MDX body goes in the default slot.
  */
 import type { CollectionEntry } from 'astro:content';
 import Base from './Base.astro';
 import ProjectPanel from '../components/ProjectPanel.astro';
+import MapIsland from '../map/MapIsland';
+import { getLandmarks } from '../map/landmarks';
+import { readMapImageSize } from '../map/mapImage';
+import { regions } from '../map/regions';
 
 interface Props {
   project: CollectionEntry<'projects'>;
 }
 const { project } = Astro.props;
-const { title, pitch, hero } = project.data;
+const { title, pitch, hero, slug } = project.data;
 const ogImage = hero.kind === 'image' ? hero.src : hero.poster;
+
+const landmarks = await getLandmarks();
+const mapSize = readMapImageSize();
+// A project without a region opens on the whole map.
+const focusId = regions.find((r) => r.projectSlug === slug)?.id;
 ---
 
 <Base title={title} description={pitch} image={ogImage}>
-  <ProjectPanel project={project}>
-    <slot />
-  </ProjectPanel>
+  <div class="project-view wrap">
+    <MapIsland client:visible landmarks={landmarks} width={mapSize.width} height={mapSize.height} focusId={focusId} />
+    <div class="project-scroll">
+      <a class="panel-close" href="/#map" aria-label="Close the project and return to the map">×</a>
+      <ProjectPanel project={project}>
+        <slot />
+      </ProjectPanel>
+    </div>
+  </div>
 </Base>
+
+<style>
+  .project-view {
+    position: relative;
+  }
+  .panel-close {
+    display: none;
+  }
+
+  /* Desktop: the panel is a scroll column over the right side of the map, as tall as the map. */
+  @media (min-width: 768px) {
+    .project-view {
+      padding-block: 1rem;
+    }
+    .project-scroll {
+      position: absolute;
+      top: 1rem;
+      right: 1.25rem; /* the .wrap padding, so the panel lines up with the map's right edge */
+      bottom: 1rem;
+      width: min(30rem, 42%);
+      overflow-y: auto;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      box-shadow: -4px 0 16px rgb(0 0 0 / 0.25);
+      animation: unroll 0.35s ease-out;
+    }
+    .panel-close {
+      display: grid;
+      place-items: center;
+      position: sticky;
+      top: 0.5rem;
+      float: right;
+      width: 2.25rem;
+      height: 2.25rem;
+      margin: 0.5rem 0.5rem 0 0;
+      border-radius: 999px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1.4rem;
+      line-height: 1;
+      text-decoration: none;
+      box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+    }
+    .panel-close:hover {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+    /* The panel covers the map's right side, where the zoom buttons normally sit. */
+    .project-view :global(.map-zoom) {
+      right: auto;
+      left: 0.75rem;
+    }
+  }
+
+  /* The panel slides in from the right, like a scroll unrolling. */
+  @keyframes unroll {
+    from {
+      opacity: 0;
+      translate: 2rem 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .project-scroll {
+      animation: none;
+    }
+  }
+</style>
