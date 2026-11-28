@@ -27,5 +27,5 @@ export const regions: Region[] = [
   { id: 'capital', name: 'Capital', href: '/about/', x: 0.52, y: 0.547, zoom: 2 },
   { id: 'village', name: 'Village', projectSlug: 'sapi-foglalo', x: 0.265, y: 0.32, zoom: 3 },
   { id: 'harbor', name: 'Harbor', href: '/#contact', x: 0.531, y: 0.791, zoom: 2 },
-  { id: 'keep', name: "Warchief's Keep", x: 0.1, y: 0.74, zoom: 3 },
+  { id: 'keep', name: "Warchief's Keep", x: 0.115, y: 0.745, zoom: 3 },
 ];
