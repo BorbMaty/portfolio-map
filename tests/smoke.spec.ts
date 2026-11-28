@@ -7,6 +7,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { isDraftSource } from '../src/lib/draft.ts';
+import { FOCUS_X, regions } from '../src/map/regions.ts';
 
 // Minimal frontmatter read: only slug and draft are needed, and both are plain one-line scalars.
 const projectDir = new URL('../src/content/projects/', import.meta.url);
@@ -321,3 +322,53 @@ test('YouTube heroes load no iframe until the poster is clicked', async ({ page 
 
 // The landing page size budget (< 300 KB) is asserted by Lighthouse CI (lighthouserc.json), which measures
 // real transfer sizes including lazy-loaded resources.
+
+// Phase 2.4 gate: every project URL opens the map with the right panel.
+for (const slug of published) {
+  test(`/projects/${slug}/ opens the map on its landmark with the panel`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto(`/projects/${slug}/`);
+    await expect(page.locator('.project-scroll .panel h1')).toBeVisible();
+    await expect(page.locator('.map-frame.is-loaded')).toBeVisible({ timeout: 15_000 });
+    const landmark = page.locator(`.map-landmarks a[href="/projects/${slug}/"]`);
+    if ((await landmark.count()) === 0) return; // a project without a region opens on the whole map
+    const [box, frame] = await Promise.all([landmark.boundingBox(), page.locator('.map-frame').boundingBox()]);
+    // FOCUS_X in MapIsland: the landmark sits 30 % across the frame, clear of the panel (OpenSeadragon may clamp
+    // near the map edges, hence the tolerance), and inside the frame vertically.
+    const across = (box!.x + box!.width / 2 - frame!.x) / frame!.width;
+    const down = (box!.y + box!.height / 2 - frame!.y) / frame!.height;
+    expect(across).toBeGreaterThan(0.2);
+    expect(across).toBeLessThan(0.4);
+    expect(down).toBeGreaterThan(0.1);
+    expect(down).toBeLessThan(0.9);
+  });
+}
+
+test('every region zooms enough to sit at FOCUS_X without hitting the map edge', () => {
+  // Drafts included: a project that comes out of draft must not open with its landmark under the panel.
+  for (const r of regions) {
+    expect(r.x + (1 - FOCUS_X) / r.zoom, r.id).toBeLessThanOrEqual(1);
+    expect(r.x - FOCUS_X / r.zoom, r.id).toBeGreaterThanOrEqual(0);
+  }
+});
+
+test('clicking a landmark on the landing map flies there and opens its project', async ({ page }) => {
+  await openLiveMap(page);
+  const link = page.locator('.map-landmarks a[href^="/projects/"]').first();
+  const href = (await link.getAttribute('href'))!;
+  const before = (await link.boundingBox())!;
+  await link.click();
+  // The flight: the landmark moves across the screen before the new page loads (plain navigation would not).
+  await expect.poll(async () => (await link.boundingBox())?.x ?? before.x).not.toBeCloseTo(before.x, 0);
+  await expect(page).toHaveURL(new RegExp(`${href}$`), { timeout: 5_000 });
+  await expect(page.locator('.project-scroll .panel h1')).toBeVisible();
+});
+
+test('a project page reads in full without JS', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto(`/projects/${published[0]}/`);
+  await expect(page.locator('.project-scroll .panel h1')).toBeVisible();
+  await expect(page.locator('.map-frame img')).toBeVisible(); // the static preview stands in for the viewer
+  await context.close();
+});
