@@ -49,13 +49,16 @@ jobs:
           if-no-files-found: ignore
 
       # Deploy only from main, and only once the Cloudflare project and SITE_URL are set (otherwise OG/canonical URLs point to localhost).
+      # Not cloudflare/wrangler-action: it runs `pnpm add wrangler`, which pnpm 12 rejects (ERR_PNPM_IGNORED_BUILDS)
+      # because wrangler's deps have unapproved install scripts. dlx runs wrangler outside package.json, like lhci above;
+      # the skipped workerd build only matters for local dev, not for uploading dist/.
       - name: Deploy to Cloudflare Pages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CLOUDFLARE_PROJECT != '' && vars.SITE_URL != ''
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PROJECT }} --branch=main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_PROJECT: ${{ vars.CLOUDFLARE_PROJECT }}
+        run: pnpm dlx wrangler@4 pages deploy dist --project-name="$CLOUDFLARE_PROJECT" --branch=main
 
       # Checks content, not just status: Pages answers unknown paths with 200 + index.html when a site has no 404 page.
       # Retries cover transient network/5xx errors; wrangler returns only after production points at the new deploy.
