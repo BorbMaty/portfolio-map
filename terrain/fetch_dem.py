@@ -14,6 +14,8 @@ import argparse
 import json
 import logging
 import math
+import shutil
+import urllib.error
 import urllib.request
 import warnings
 from pathlib import Path
@@ -36,8 +38,14 @@ TILE_URL = "https://copernicus-dem-30m.s3.amazonaws.com/{name}/{name}.tif"
 # GLO-30 pixel pitch along latitude: 1 arc second.
 RES_LAT_DEG = 1 / 3600
 
-# Mean metres per degree of latitude (WGS84 meridian arc, accurate to ~0.5 % at mid latitudes).
-M_PER_DEG_LAT = 111_320.0
+# Metres per degree of latitude at ~47 N on the WGS84 ellipsoid (meridian arc,
+# 111 132.95 - 559.85 cos 2phi; Snyder, "Map Projections - A Working Manual", USGS 1987, p. 25).
+M_PER_DEG_LAT = 111_170.0
+
+# GLO-30 is georeferenced pixel-is-point: tile N46 E024 really spans lat 46.00014-47.00014 and
+# lon 23.99986-24.99986, i.e. it is shifted half a pixel north and west of its whole-degree name.
+# shortcut: assumes 1" lon spacing, true below 50 N; above that GLO-30 widens it, so revisit if the bbox moves north.
+HALF_PX_DEG = RES_LAT_DEG / 2
 
 
 def tile_names(south: float, west: float, north: float, east: float) -> list[str]:
@@ -55,9 +63,10 @@ def tile_names(south: float, west: float, north: float, east: float) -> list[str
     if not (0 <= south < north and 0 <= west < east):
         raise ValueError(f"bbox must be non-empty and in the N/E hemisphere, got {(south, west, north, east)}")
     names = []
-    # Tiles are named by their south-west corner; ceil(edge) - 1 avoids an extra tile when an edge sits on a whole degree.
-    for lat in range(math.floor(south), math.ceil(north)):
-        for lon in range(math.floor(west), math.ceil(east)):
+    # A point at lat y lies in tile floor(y - half px), at lon x in tile floor(x + half px) (see HALF_PX_DEG);
+    # so a south or east edge on a whole degree needs the neighbouring tile for its last row/column.
+    for lat in range(math.floor(south - HALF_PX_DEG), math.ceil(north - HALF_PX_DEG)):
+        for lon in range(math.floor(west + HALF_PX_DEG), math.ceil(east + HALF_PX_DEG)):
             names.append(f"Copernicus_DSM_COG_10_N{lat:02d}_00_E{lon:03d}_00_DEM")
     return names
 
@@ -82,8 +91,10 @@ def to_uint16(elev_m: np.ndarray) -> tuple[np.ndarray, float, float]:
         (heightmap, min_m, max_m): the uint16 grid and the real range it maps to.
 
     Raises:
-        ValueError: if the grid is flat, since the stretch would divide by zero.
+        ValueError: if the grid has NaN (missing data) or is flat, since the stretch would divide by zero.
     """
+    if np.isnan(elev_m).any():
+        raise ValueError("elevation grid has NaN pixels: a tile is missing or the bbox leaves the data")
     lo, hi = float(elev_m.min()), float(elev_m.max())
     if hi <= lo:
         raise ValueError("elevation grid is flat")
@@ -92,7 +103,19 @@ def to_uint16(elev_m: np.ndarray) -> tuple[np.ndarray, float, float]:
 
 
 def download(name: str, dem_dir: Path) -> Path:
-    """Fetch one tile unless it is already on disk. Returns its path."""
+    """Fetch one tile unless it is already on disk.
+
+    Args:
+        name: GLO-30 tile name (see tile_names).
+        dem_dir: folder the .tif is stored in.
+
+    Returns:
+        Path of the local .tif.
+
+    Raises:
+        RuntimeError: if the tile does not exist in GLO-30 (sea or a void) or the server errors.
+        urllib.error.URLError / TimeoutError: on network failure.
+    """
     path = dem_dir / f"{name}.tif"
     if path.exists():
         return path
@@ -100,13 +123,24 @@ def download(name: str, dem_dir: Path) -> Path:
     log.info("downloading %s", url)
     tmp = path.with_suffix(".part")
     # Write to .part first so an interrupted download never looks like a finished tile.
-    urllib.request.urlretrieve(url, tmp)
-    tmp.rename(path)
+    try:
+        # 60 s per read, so a stalled S3 connection fails instead of hanging forever.
+        with urllib.request.urlopen(url, timeout=60) as resp, tmp.open("wb") as out:
+            shutil.copyfileobj(resp, out)
+    except urllib.error.HTTPError as e:
+        tmp.unlink(missing_ok=True)
+        raise RuntimeError(f"tile {name} not available in GLO-30 (HTTP {e.code}; sea or void?)") from e
+    tmp.replace(path)
     return path
 
 
 def main() -> None:
-    """Download the tiles, crop and resample to square pixels, write heightmap.png + .json."""
+    """Download the tiles, crop and resample to square pixels, write heightmap.png + .json.
+
+    Raises:
+        ValueError: on a bad bbox, or if the cropped grid has missing data or is flat.
+        RuntimeError: if a tile cannot be downloaded.
+    """
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--bbox", nargs=4, type=float, metavar=("S", "W", "N", "E"), default=DEFAULT_BBOX)
@@ -126,6 +160,7 @@ def main() -> None:
             bounds=(west, south, east, north),
             res=(lon_resolution(lat_mid), RES_LAT_DEG),
             resampling=rasterio.enums.Resampling.bilinear,
+            nodata=np.nan,  # uncovered pixels become NaN, which to_uint16 rejects, instead of a silent 0 m
         )
     finally:
         for s in sources:
@@ -134,10 +169,11 @@ def main() -> None:
     heightmap, lo, hi = to_uint16(mosaic[0])
     rows, cols = heightmap.shape
     png = OUT_DIR / "heightmap.png"
-    # A PNG holds no geodata by design; the bbox goes to heightmap.json instead.
-    warnings.filterwarnings("ignore", category=rasterio.errors.NotGeoreferencedWarning)
-    with rasterio.open(png, "w", driver="PNG", width=cols, height=rows, count=1, dtype="uint16") as dst:
-        dst.write(heightmap, 1)
+    with warnings.catch_warnings():
+        # A PNG holds no geodata by design; the bbox goes to heightmap.json instead.
+        warnings.simplefilter("ignore", rasterio.errors.NotGeoreferencedWarning)
+        with rasterio.open(png, "w", driver="PNG", width=cols, height=rows, count=1, dtype="uint16") as dst:
+            dst.write(heightmap, 1)
 
     pixel_m = RES_LAT_DEG * M_PER_DEG_LAT
     meta = {

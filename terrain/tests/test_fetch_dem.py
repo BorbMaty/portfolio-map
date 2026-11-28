@@ -16,9 +16,21 @@ def test_tile_names_default_bbox_spans_two_tiles():
     ]
 
 
-def test_tile_names_edge_on_whole_degree_adds_no_tile():
-    # north = 47.0 exactly must not pull in the N47 row.
-    assert len(tile_names(46.0, 24.0, 47.0, 25.0)) == 1
+def test_tile_names_whole_degree_edges_follow_half_pixel_shift():
+    # Regression: tiles are shifted half a pixel north-west, so a south edge on 46.0 needs N45
+    # and an east edge on 25.0 needs E025; north 47.0 and west 24.0 need nothing extra.
+    names = tile_names(46.0, 24.0, 47.0, 25.0)
+    assert names == [
+        "Copernicus_DSM_COG_10_N45_00_E024_00_DEM",
+        "Copernicus_DSM_COG_10_N45_00_E025_00_DEM",
+        "Copernicus_DSM_COG_10_N46_00_E024_00_DEM",
+        "Copernicus_DSM_COG_10_N46_00_E025_00_DEM",
+    ]
+
+
+def test_to_uint16_rejects_nan():
+    with pytest.raises(ValueError, match="NaN"):
+        to_uint16(np.array([[300.0, np.nan]]))
 
 
 @pytest.mark.parametrize("bbox", [(47, 24, 46, 25), (46, 25, 47, 24), (-1, 24, 46, 25)])
