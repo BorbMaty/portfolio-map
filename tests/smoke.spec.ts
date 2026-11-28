@@ -36,7 +36,7 @@ test('there is at least one published project', () => {
   expect(published.length).toBeGreaterThan(0);
 });
 
-for (const path of ['/', '/cv/', '/about/', '/cv.pdf', ...published.map((s) => `/projects/${s}/`)]) {
+for (const path of ['/', '/cv/', '/about/', '/cv.pdf', '/map/preview.webp', ...published.map((s) => `/projects/${s}/`)]) {
   test(`GET ${path} returns 200`, async ({ request }) => {
     const res = await request.get(path);
     expect(res.status()).toBe(200);
@@ -190,9 +190,18 @@ test('gallery lightbox opens, browses with wrap-around and closes back to the th
   await expect(thumbs.nth(1)).toBeFocused();
 });
 
-test('the landing page ships no map JS until phase 2.3', async ({ page }) => {
+test('the landing page ships no map JS until phase 2.3c', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('astro-island')).toHaveCount(0);
+});
+
+test('the map shows the terrain at its own aspect ratio, with the DEM credit', async ({ page }) => {
+  await page.goto('/');
+  // Landmarks are placed as fractions of the render, so the frame must match its aspect ratio exactly.
+  await expect(page.locator('.map-frame')).toHaveAttribute('style', /aspect-ratio:\s*\d+ \/ \d+/);
+  await expect(page.locator('.map-frame img')).toHaveAttribute('src', '/map/preview.webp');
+  // The Copernicus DEM licence requires this credit wherever the terrain is shown.
+  await expect(page.locator('.map-credit')).toContainText('Copernicus WorldDEM-30');
 });
 
 test('no draft media is copied into dist/', () => {

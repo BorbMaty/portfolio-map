@@ -155,6 +155,8 @@ def add_camera(meta: dict, relief_km: float, tilt_deg: float) -> tuple[float, fl
     # covers the ragged mesh edge.
     frame_w = width_km * 0.98
     frame_h = (height_km * math.cos(t) - relief_km * math.sin(t)) * 0.98
+    if frame_h <= 0:
+        sys.exit(f"tilt {tilt_deg} deg / relief {relief_km:.1f} km too large: the relief hides the whole map")
     cam_data.ortho_scale = max(frame_w, frame_h)  # Blender fits ortho_scale to the longer render side
     cam_data.clip_end = 2 * dist_km
     cam = bpy.data.objects.new("Camera", cam_data)

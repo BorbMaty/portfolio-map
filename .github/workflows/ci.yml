@@ -36,8 +36,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # terrain/ is a uv project (Python): its tests run here, and it cuts the map tiles the build reads.
-      # The default cache keys on **/uv.lock.
-      - uses: astral-sh/setup-uv@v10
+      # The default cache keys on **/uv.lock. Pinned to a commit: setup-uv publishes no floating major tags (no @v10).
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
       - name: Terrain tests
         working-directory: terrain
         run: uv run pytest -q

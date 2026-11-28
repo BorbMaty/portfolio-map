@@ -1,8 +1,9 @@
 /**
  * Map regions and their landmark positions.
- * x, y are normalised 0–1 coordinates on the final terrain image (phase 2: a ~8192² Blender render served as
- * deep-zoom tiles via OpenSeadragon), so they stay valid whatever size the map is drawn at.
- * Positions are rough placeholders until the terrain render exists; `zoom` is the phase 2 fly-to zoom level.
+ * x, y are normalised 0–1 coordinates on the terrain render (terrain/scene.py, served as deep-zoom tiles), so they
+ * stay valid whatever size the map is drawn at. The render's framing is frozen for this reason: a new render may
+ * only change its size (4096 px now, 8192 px in phase 3.1). `zoom` is the phase 2.4 fly-to zoom level.
+ * Positions are placeholders until Mara places the landmarks (phase 2.3b).
  */
 export interface Region {
   id: string;
