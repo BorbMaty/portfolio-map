@@ -82,7 +82,8 @@ The map is the experience, but never the only door: a recruiter must reach the C
 1. **Landing (above the fold):** the full map, faded, with a parchment banner over it: name, role
    ("Software engineer — ML, XR, cloud"), the one-line story, and three buttons: *Explore the map · View CV ·
    Contact*. The two flagships glow and pulse.
-2. **Map mode (desktop):** pan with drag, zoom with wheel or buttons; click a landmark → the camera flies to it
+2. **Map mode (desktop):** pan with drag, zoom with buttons, double-click or pinch (the wheel keeps scrolling the
+   page, decided 2026-11-28); click a landmark → the camera flies to it
    and a scroll panel unrolls from the right with the project page. Hover shows a short tooltip (name + one
    line). Keyboard: Tab between landmarks, Enter opens, Esc closes. A small legend and a "quest log" list of
    all regions for anyone who'd rather click a list.

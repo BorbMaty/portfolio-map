@@ -2,7 +2,8 @@
    normalised coordinates, so the image must fill the frame exactly (no cropping). */
 .map-frame {
   position: relative;
-  overflow: hidden;
+  /* clip, not hidden: a hidden box still scrolls when a clipped landmark gets keyboard focus, shifting the map. */
+  overflow: clip;
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
@@ -29,6 +30,10 @@
 }
 .map-landmarks a {
   pointer-events: auto;
+}
+/* The map canvas fills the frame, so the usual outside focus ring would be clipped: draw it inside. */
+.map-viewer .openseadragon-canvas:focus-visible {
+  outline-offset: -3px;
 }
 .map-landmarks li {
   position: absolute;

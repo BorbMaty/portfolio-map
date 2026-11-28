@@ -205,7 +205,7 @@ test('phones never load the map JS', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await page.waitForLoadState('networkidle');
-  expect(requests.filter((u) => /openseadragon|terrain_files/.test(u))).toEqual([]);
+  expect(requests.filter((u) => /MapIsland|openseadragon|terrain_files/.test(u))).toEqual([]);
 });
 
 test('landmarks stay pinned to the map while zooming', async ({ page }) => {
@@ -221,9 +221,10 @@ test('landmarks stay pinned to the map while zooming', async ({ page }) => {
         return { dx: b.x + b.width / 2 - centre.x, dy: b.y + b.height / 2 - centre.y };
       }),
     );
+  const spread = (o: { dx: number }[]) => o.reduce((a, p) => a + Math.abs(p.dx), 0);
   const before = await offsets();
   await page.getByRole('button', { name: 'Zoom in' }).click();
-  await expect.poll(async () => (await offsets())[0].dx).not.toBeCloseTo(before[0].dx, 0);
+  await expect.poll(async () => spread(await offsets())).toBeGreaterThan(spread(before) * 1.3);
   const after = await offsets();
   // Zooming about the centre scales every landmark's offset from the centre by the same factor (1.6), which is
   // what being pinned to the image means. Landmarks pushed out of the frame are clipped, but their position holds.
@@ -234,11 +235,32 @@ test('landmarks stay pinned to the map while zooming', async ({ page }) => {
   }
 });
 
+test('the map keyboard keys cannot flip the terrain under the labels', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openLiveMap(page);
+  // Measured against the frame: focusing the canvas may scroll the page, which moves everything equally.
+  const inFrame = async () => {
+    const [li, frame] = await Promise.all([
+      page.locator('.map-landmarks li').first().boundingBox(),
+      page.locator('.map-frame').boundingBox(),
+    ]);
+    return { x: Math.round(li!.x - frame!.x), y: Math.round(li!.y - frame!.y) };
+  };
+  const before = await inFrame();
+  await page.locator('.openseadragon-canvas').focus();
+  await page.keyboard.press('f');
+  await page.keyboard.press('r');
+  await page.waitForTimeout(300);
+  expect(await inFrame()).toEqual(before);
+});
+
 test('map budgets: first view tiles < 800 KB, everything else < 300 KB', async ({ page }) => {
-  const sizes: { url: string; bytes: number }[] = [];
-  page.on('requestfinished', async (r) => sizes.push({ url: r.url(), bytes: (await r.sizes()).responseBodySize }));
+  // Collect the size promises and await them all before summing: sizes() resolves after the event fires.
+  const pending: Promise<{ url: string; bytes: number }>[] = [];
+  page.on('requestfinished', (r) => pending.push(r.sizes().then((s) => ({ url: r.url(), bytes: s.responseBodySize }))));
   await openLiveMap(page);
   await page.waitForLoadState('networkidle');
+  const sizes = await Promise.all(pending);
   const sum = (pick: (u: string) => boolean) => sizes.filter((s) => pick(s.url)).reduce((a, s) => a + s.bytes, 0);
   const tiles = sum((u) => u.includes('/map/terrain_files/'));
   const rest = sum((u) => !u.includes('/map/terrain_files/'));

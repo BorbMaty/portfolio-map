@@ -45,15 +45,23 @@ export default function MapIsland({ landmarks, width, height }: Props) {
         element: viewerEl.current,
         tileSources: '/map/terrain.dzi',
         showNavigationControl: false, // own buttons below; the default ones load extra images
-        // The wheel scrolls the page, not the map: a landing page must not trap scrolling. Zoom is by buttons,
-        // double-click or pinch.
-        gestureSettingsMouse: { scrollToZoom: false },
+        // The wheel scrolls the page, not the map: a landing page must not trap scrolling (decided 2026-11-28).
+        // Zoom is by buttons, double-click or pinch; a single click does nothing, so clicking around is safe.
+        gestureSettingsMouse: { scrollToZoom: false, clickToZoom: false, dblClickToZoom: true },
         animationTime: reduceMotion ? 0 : 1.2,
         visibilityRatio: 1, // the map can't be dragged out of its frame
         constrainDuringPan: true,
         minZoomLevel: 1, // the frame has the image's aspect ratio, so zoom 1 is the whole map
       });
       viewer.current = v;
+
+      // The canvas is a tab stop (OpenSeadragon's keyboard panning): give it a name. Its built-in flip (f) and
+      // rotate (r) keys would turn the terrain under the landmark labels, so they are switched off.
+      v.canvas.setAttribute('aria-label', 'Map: drag or use the arrow keys to pan');
+      v.addHandler('canvas-key', (e) => {
+        const key = (e.originalEvent as KeyboardEvent).code;
+        if (key === 'KeyF' || key === 'KeyR') e.preventDefaultAction = true;
+      });
 
       // Landmarks stay in their own list (accessible, owned by Preact); on every frame drawn, each marker moves
       // to the screen pixel of its map point.
