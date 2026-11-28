@@ -27,7 +27,9 @@ Status: `[x]` done · `[ ]` open.
   (decided 2026-11-28; Solar System has no public repo).
 - [ ] **1.5 Go live** — Cloudflare Pages project, secrets/variables, `SITE_URL`, first deploy, link previews
   checked, Cloudflare Web Analytics.
-  *Gate:* `https://<name>.pages.dev` serves the site and `/cv.pdf`. **Phase 1 done.**
+  *Gate:* `https://portfoliobml.pages.dev` serves the site and `/cv.pdf` (checked by CI after every deploy).
+  **Phase 1 done.** Decided 2026-11-28: launch on `pages.dev`; a name domain comes in 3.4
+  (`printermonitor.app` rejected: it does not read as a CV address).
 
 ## Phase 2 — the map
 

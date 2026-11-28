@@ -56,3 +56,11 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PROJECT }} --branch=main
+
+      # Checks content, not just status: Pages answers unknown paths with 200 + index.html when a site has no 404 page.
+      # Retries cover the few seconds before the new deployment is served.
+      - name: Check the live site
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CLOUDFLARE_PROJECT != '' && vars.SITE_URL != ''
+        run: |
+          curl -sSf --retry 5 --retry-all-errors --retry-delay 10 "$SITE_URL/" | grep -qF "<link rel=\"canonical\" href=\"$SITE_URL/\">"
+          curl -sSf --retry 5 --retry-all-errors --retry-delay 10 -o /dev/null -w '%{content_type}' "$SITE_URL/cv.pdf" | grep -q '^application/pdf'
