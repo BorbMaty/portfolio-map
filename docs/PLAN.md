@@ -61,7 +61,8 @@ lettering, the landmarks and the fog, not the drawing style.
 2. Procedural materials: grass, fields, forest by slope and height, rivers, snow on the peaks; Poly Haven
    textures (CC0), as in the sim.
 3. Landmarks modelled by script: reuse own farm assets (barn, shed, Székely gate) for the Homestead; new ones
-   for the Watchtower, Observatory, Capital, Harbor.
+   for the Watchtower, Observatory, Capital, Harbor, Village. Harvest Fields are crop-field patches in the
+   terrain material, not a model.
 4. Orthographic (or slightly oblique) render at about 8192 × 8192, plus a dusk/night render for the night theme.
 5. Cut into deep-zoom tiles (WebP) → served static; labels and landmark hit-areas are an HTML/SVG overlay on
    top, so they stay crisp, clickable and accessible.

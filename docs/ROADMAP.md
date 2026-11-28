@@ -55,8 +55,9 @@ Status: `[x]` done · `[ ]` open.
 
 - [ ] **3.1** Landmark models + final terrain render + night render. Landmarks modelled by script in Blender at
   the `regions.ts` positions: Homestead from own farm assets (barn, shed, Székely gate; no TurboSquid), new
-  Watchtower, Observatory, Capital, Harbor, Village (the Keep stays in Later). Then the ~8192 px render with Poly Haven (CC0)
-  materials and rivers, and the dusk/night render. Split into 3.1a/3.1b if the PR grows past ~400 lines.
+  Watchtower, Observatory, Capital, Harbor, Village; Harvest Fields as crop-field patches in the terrain material,
+  no model; the Keep stays in Later. Then the ~8192 px render with Poly Haven (CC0) materials and rivers, and
+  the dusk/night render. Split into 3.1a/3.1b if the PR grows past ~400 lines.
 - [ ] **3.2** Fog of war.
 - [ ] **3.3** Per-project and landing/CV OG images, sitemap, SEO.
 - [ ] **3.4** Domain, final Lighthouse and content check → **launch**.
