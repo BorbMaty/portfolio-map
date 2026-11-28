@@ -32,6 +32,9 @@ WIDTH_PX, HEIGHT_PX = 1600, 1200
 PIXEL_M = 40.0
 SEA_LEVEL_M = 0.0
 
+# Shaping constants below (positions, radii, heights) were tuned by eye on the seed-21 draft (2026-11-28).
+# Positions and radii are fractions of the map width; heights are metres.
+
 # Landmark spots as (x, y) fractions of the heightmap, x east, y south. Ids match src/map/regions.ts.
 LANDMARKS: dict[str, tuple[float, float]] = {
     "observatory": (0.84, 0.16),
@@ -72,6 +75,7 @@ def fbm(shape: tuple[int, int], cells: int, octaves: int, rng: np.random.Generat
         gy, gx = max(2, round(n * rows / max(shape)) + 2), max(2, round(n * cols / max(shape)) + 2)
         grid = rng.random((gy, gx))
         # Sample the coarse grid at every pixel; smoothstep weights hide the grid lines (value noise).
+        # The 1.001 keeps the last sample just below the last grid line, so iy + 1 stays inside the grid.
         fy = np.linspace(0, gy - 1.001, rows)[:, None]
         fx = np.linspace(0, gx - 1.001, cols)[None, :]
         iy, ix = fy.astype(int), fx.astype(int)
@@ -92,6 +96,9 @@ def polyline_distance(x: np.ndarray, y: np.ndarray, points: list[tuple[float, fl
         x, y: pixel coordinates as fractions, broadcastable grids.
         points: polyline vertices as (x, y) fractions.
         aspect: height / width of the map, so y distances are measured in the same unit as x.
+
+    Returns:
+        Array of distances, the broadcast shape of x and y.
     """
     best = np.full(np.broadcast(x, y).shape, np.inf)
     for (x0, y0), (x1, y1) in pairwise(points):
@@ -104,7 +111,17 @@ def polyline_distance(x: np.ndarray, y: np.ndarray, points: list[tuple[float, fl
 
 
 def gaussian(x: np.ndarray, y: np.ndarray, cx: float, cy: float, radius: float, aspect: float) -> np.ndarray:
-    """Round bump of height 1 at (cx, cy) falling off with `radius` (width units)."""
+    """Round bump of height 1 at (cx, cy).
+
+    Args:
+        x, y: pixel coordinates as fractions (broadcastable grids).
+        cx, cy: centre as fractions.
+        radius: fall-off distance in map-width units (the bump is 1/e high at this distance).
+        aspect: height / width of the map.
+
+    Returns:
+        Array in (0, 1], the broadcast shape of x and y.
+    """
     return np.exp(-(((x - cx) ** 2 + ((y - cy) * aspect) ** 2) / radius**2))
 
 
@@ -130,9 +147,11 @@ def generate(seed: int, width_px: int = WIDTH_PX, height_px: int = HEIGHT_PX) ->
     land += (fbm(shape, 24, 4, rng) - 0.5) * 0.6  # fine noise: coves and headlands along the shore
     land -= 2.2 * gaussian(x, y, 0.47, 0.86, 0.075, aspect)  # the Harbor's bay, cut into the south coast
     # Solid ground under every landmark: 1.5 outweighs the coast noise (at most about 1), so no seed puts a town
-    # in the sea.
+    # in the sea. `dry` (a tighter patch) later keeps the river channel off the landmark itself.
+    dry = np.zeros(shape)
     for lx, ly in LANDMARKS.values():
         land += 1.5 * gaussian(x, y, lx, ly, 0.02, aspect)
+        dry = np.maximum(dry, gaussian(x, y, lx, ly, 0.01, aspect))
 
     # Land relief: a gentle rise from the shore, rolling hills, and a north-east mountain backbone.
     hills = fbm(shape, 12, 7, rng)
@@ -167,7 +186,9 @@ def generate(seed: int, width_px: int = WIDTH_PX, height_px: int = HEIGHT_PX) ->
     for branch in RIVER:
         d = np.minimum(d, polyline_distance(wx, wy, branch, aspect))
     valley = np.exp(-((d / 0.045) ** 2))
-    channel = np.exp(-((d / 0.0035) ** 2))
+    # The channel is cut everywhere except right at a landmark: the warp can swing a branch onto one (e.g. the
+    # Harbor for some seeds). The dry patch (0.01) is narrower than the Capital's 0.025 distance from the fork.
+    channel = np.exp(-((d / 0.0035) ** 2)) * (1 - dry)
     elevation = elevation * (1 - 0.85 * valley)
     elevation = elevation * (1 - channel) - 4 * channel
 

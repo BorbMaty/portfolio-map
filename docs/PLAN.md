@@ -38,8 +38,8 @@ Teamwork is missing now that the hackathon is out: mention team work on the CV p
 
 ## Visual concept
 
-The realm is a stylised Transylvania with invented fantasy names: rolling hills, a mountain arc, a river
-valley. It's personal (the tractor sim is set near Reghin), original, and avoids any Warcraft or Blizzard
+The realm is a fictional coast inspired by Transylvania, with invented fantasy names: rolling hills, a
+mountain arc, a river valley that runs down to a bay on the sea. It's personal (the tractor sim is set near Reghin), original, and avoids any Warcraft or Blizzard
 lookalike.
 
 **Geography (rough placement):**

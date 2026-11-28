@@ -41,7 +41,8 @@ def test_observatory_is_on_the_heights(elev):
     assert at(elev, "observatory") >= np.quantile(land, 0.9)
 
 
-@pytest.mark.parametrize("seed", [1, 2, 3, 21, 42])
+# Regression: hand-picked seeds missed the river cutting through the Harbor (seeds 31, 60, 71, 98).
+@pytest.mark.parametrize("seed", range(100))
 def test_landmark_rules_hold_for_other_seeds(seed):
     e = generate(seed=seed, width_px=W, height_px=H)
     assert all(at(e, name) > 0 for name in LANDMARKS)
@@ -66,11 +67,12 @@ def test_harvest_fields_are_flat(elev):
     assert slope[round(y * (H - 1)), round(x * (W - 1))] < land_slope
 
 
-def test_capital_is_beside_the_fork(elev):
-    # Near the fork (within 4 % of the map width) but on dry land, so not in the channel.
-    aspect = H / W
-    d = polyline_distance(np.array(LANDMARKS["capital"][0]), np.array(LANDMARKS["capital"][1]), [FORK, FORK], aspect)
-    assert 0.01 < float(d) < 0.04
+def test_capital_is_beside_the_river(elev):
+    # In the generated map: river water within 4 % of the map width, but dry ground at the Capital itself.
+    x, y = LANDMARKS["capital"]
+    r, c = round(y * (H - 1)), round(x * (W - 1))
+    k = round(0.04 * W)
+    assert (elev[r - k : r + k, c - k : c + k] < 0).any()
     assert at(elev, "capital") > 0
     assert all(FORK in branch for branch in RIVER)
 

@@ -59,8 +59,8 @@ def build_terrain(meta: dict, exaggeration: float) -> tuple[bpy.types.Object, fl
     height_km = meta["size_m"]["height"] / 1000
     relief_km = (meta["elevation_m"]["max"] - meta["elevation_m"]["min"]) / 1000 * exaggeration
 
-    # Half the heightmap resolution is plenty for a draft render (~580k vertices for the default bbox);
-    # the cap keeps a larger bbox from building a mesh of millions of vertices.
+    # Half the heightmap resolution is plenty for a draft render (~480k vertices at 1600 x 1200 px);
+    # the cap keeps a larger heightmap from building a mesh of millions of vertices.
     step = max(2, math.ceil(max(meta["pixels"]["width"], meta["pixels"]["height"]) / MAX_GRID_CELLS))
     cols, rows = meta["pixels"]["width"] // step, meta["pixels"]["height"] // step
     bpy.ops.mesh.primitive_grid_add(x_subdivisions=cols, y_subdivisions=rows, size=1, calc_uvs=True)
@@ -99,7 +99,6 @@ def terrain_material(relief_km: float, sea_km: float) -> bpy.types.Material:
     mat = bpy.data.materials.new("TerrainDraft")
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     bsdf = nodes["Principled BSDF"]
-    bsdf.inputs["Roughness"].default_value = 0.9
 
     geo = nodes.new("ShaderNodeNewGeometry")
     pos = nodes.new("ShaderNodeSeparateXYZ")
