@@ -46,8 +46,8 @@ const cardWidths = [320, 660, 990, 1320];
   <section id="map" class="wrap" aria-labelledby="map-heading">
     <h2 id="map-heading">The map</h2>
     <p class="map-mobile-note">The map is made for larger screens. Every region is in the <a href="#projects">quest log</a> below.</p>
-    {/* No client directive: the map is static HTML until OpenSeadragon arrives (phase 2.3c). */}
-    <MapIsland landmarks={landmarks} width={mapSize.width} height={mapSize.height} />
+    {/* client:visible: no map JS until the map scrolls into view (never on phones, where it is hidden). */}
+    <MapIsland client:visible landmarks={landmarks} width={mapSize.width} height={mapSize.height} />
   </section>
 
   <section id="projects" class="wrap" aria-labelledby="quest-log">

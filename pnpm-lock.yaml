@@ -200,6 +200,9 @@ importers:
       astro:
         specifier: ^7.4.13
         version: 7.4.13(yaml@2.9.1)
+      openseadragon:
+        specifier: ^6.1.1
+        version: 6.1.1
       preact:
         specifier: ^11.2.0
         version: 11.2.0(preact-render-to-string@6.8.3)
@@ -1663,6 +1666,9 @@ packages:
 
   oniguruma-to-es@4.3.6:
     resolution: {integrity: sha512-csuQ9x3Yr0cEIs/Zgx/OEt9iBw9vqIunAPQkx19R/fiMq2oGVTgcMqO/V3Ybqefr1TBvosI6jU539ksaBULJyA==}
+
+  openseadragon@6.1.1:
+    resolution: {integrity: sha512-g4iKe2q8B642SaBT3+x4ZF3/8b1TxPPydyjmtrOLgDrlYWMKd9ZXM+1Cb/xa9DVySkvs/7l6HR1nHKfD5F3Tsw==}
 
   p-limit@7.3.3:
     resolution: {integrity: sha512-SKgVvDU5TNIxQ4r30U75BNLC6a+6GOEjngrk/ysM5+Zu3oJuk1SC5ApzIzY/7PjCEjoVPMWJ0zho/4QUiEB7TQ==}
@@ -3622,6 +3628,8 @@ snapshots:
       oniguruma-parser: 0.12.2
       regex: 6.1.0
       regex-recursion: 6.0.2
+
+  openseadragon@6.1.1: {}
 
   p-limit@7.3.3:
     dependencies:
