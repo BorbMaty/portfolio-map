@@ -39,7 +39,8 @@ Status: `[x]` done · `[ ]` open.
   Approved 2026-11-28: bbox 46.60–47.00 N, 24.40–25.05 E; exaggeration 2.5, tilt 25°. `terrain/` is a uv project
   (rasterio, numpy); its tests are not in CI yet. Look (forest band, snow, edges) is left for 3.1.
 - [ ] **2.2 Tiles** — script cutting the render into deep-zoom WebP tiles. *Gate:* tiles rebuild from one command.
-- [ ] **2.3 Pan / zoom** — OpenSeadragon in `MapIsland`, landmark overlay from `regions.ts`.
+- [ ] **2.3 Pan / zoom** — OpenSeadragon in `MapIsland`, landmark overlay from `regions.ts`. Mara places each
+  landmark on the draft terrain (real `x`/`y` in `regions.ts`); the 3D models in 3.1 go on the same spots.
   *Gate:* first map view < 800 KB; landmarks stay pinned while zooming. Exclude map tiles from the
   landing `resource-summary` budget in `lighthouserc.json` (it counts everything since 1.1).
 - [ ] **2.4 Fly-to + panel** — landmark click animates the view and opens `ProjectPanel`; `/projects/<slug>`
@@ -52,7 +53,10 @@ Status: `[x]` done · `[ ]` open.
 
 ## Phase 3 — polish and launch
 
-- [ ] **3.1** Final terrain render + night render.
+- [ ] **3.1** Landmark models + final terrain render + night render. Landmarks modelled by script in Blender at
+  the `regions.ts` positions: Homestead from own farm assets (barn, shed, Székely gate; no TurboSquid), new
+  Watchtower, Observatory, Capital, Harbor, Village (the Keep stays in Later). Then the ~8192 px render with Poly Haven (CC0)
+  materials and rivers, and the dusk/night render. Split into 3.1a/3.1b if the PR grows past ~400 lines.
 - [ ] **3.2** Fog of war.
 - [ ] **3.3** Per-project and landing/CV OG images, sitemap, SEO.
 - [ ] **3.4** Domain, final Lighthouse and content check → **launch**.
