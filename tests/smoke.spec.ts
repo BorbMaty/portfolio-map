@@ -190,9 +190,62 @@ test('gallery lightbox opens, browses with wrap-around and closes back to the th
   await expect(thumbs.nth(1)).toBeFocused();
 });
 
-test('the landing page ships no map JS until phase 2.3c', async ({ page }) => {
+/** Open the landing page, bring the map into view and wait until OpenSeadragon has drawn the first full view. */
+async function openLiveMap(page: import('@playwright/test').Page) {
   await page.goto('/');
-  await expect(page.locator('astro-island')).toHaveCount(0);
+  await page.locator('#map').scrollIntoViewIfNeeded();
+  await expect(page.locator('.map-frame.is-loaded')).toBeVisible({ timeout: 15_000 });
+}
+
+test('phones never load the map JS', async ({ page }) => {
+  // The map is display:none below 768 px, so client:visible never fires.
+  await page.setViewportSize({ width: 390, height: 844 });
+  const requests: string[] = [];
+  page.on('request', (r) => requests.push(r.url()));
+  await page.goto('/');
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForLoadState('networkidle');
+  expect(requests.filter((u) => /openseadragon|terrain_files/.test(u))).toEqual([]);
+});
+
+test('landmarks stay pinned to the map while zooming', async ({ page }) => {
+  // Reduced motion: OpenSeadragon jumps instead of animating, so positions can be read right after a click.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openLiveMap(page);
+  const frame = (await page.locator('.map-frame').boundingBox())!;
+  const centre = { x: frame.x + frame.width / 2, y: frame.y + frame.height / 2 };
+  const offsets = async () =>
+    Promise.all(
+      (await page.locator('.map-landmarks li').all()).map(async (li) => {
+        const b = (await li.boundingBox())!;
+        return { dx: b.x + b.width / 2 - centre.x, dy: b.y + b.height / 2 - centre.y };
+      }),
+    );
+  const before = await offsets();
+  await page.getByRole('button', { name: 'Zoom in' }).click();
+  await expect.poll(async () => (await offsets())[0].dx).not.toBeCloseTo(before[0].dx, 0);
+  const after = await offsets();
+  // Zooming about the centre scales every landmark's offset from the centre by the same factor (1.6), which is
+  // what being pinned to the image means. Landmarks pushed out of the frame are clipped, but their position holds.
+  for (const [i, b] of before.entries()) {
+    if (Math.hypot(b.dx, b.dy) < 20) continue; // too close to the centre for a stable ratio
+    expect(after[i].dx).toBeCloseTo(b.dx * 1.6, -1);
+    expect(after[i].dy).toBeCloseTo(b.dy * 1.6, -1);
+  }
+});
+
+test('map budgets: first view tiles < 800 KB, everything else < 300 KB', async ({ page }) => {
+  const sizes: { url: string; bytes: number }[] = [];
+  page.on('requestfinished', async (r) => sizes.push({ url: r.url(), bytes: (await r.sizes()).responseBodySize }));
+  await openLiveMap(page);
+  await page.waitForLoadState('networkidle');
+  const sum = (pick: (u: string) => boolean) => sizes.filter((s) => pick(s.url)).reduce((a, s) => a + s.bytes, 0);
+  const tiles = sum((u) => u.includes('/map/terrain_files/'));
+  const rest = sum((u) => !u.includes('/map/terrain_files/'));
+  console.log(`map budget: tiles ${Math.round(tiles / 1024)} KB, rest ${Math.round(rest / 1024)} KB`);
+  expect(tiles).toBeGreaterThan(0);
+  expect(tiles).toBeLessThan(800 * 1024);
+  expect(rest).toBeLessThan(300 * 1024);
 });
 
 test('the map shows the terrain at its own aspect ratio', async ({ page }) => {
