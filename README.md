@@ -42,13 +42,16 @@ Cloudflare Pages and Actions on a public repo are free.
 
 One-time setup:
 
-1. Cloudflare dashboard → Workers & Pages → Create → Pages → **Direct Upload**, name the project
-   (e.g. `portfolio-map`). No build settings are needed; for reference the equivalent is build command
-   `pnpm build:all`, output directory `dist`.
-2. Create an API token with the **Cloudflare Pages: Edit** permission.
+1. Cloudflare dashboard → Workers & Pages → Create → Pages → **Direct Upload**, name the project and upload
+   any placeholder folder (CI replaces it). No build settings are needed; for reference the equivalent is
+   build command `pnpm build:all`, output directory `dist`. Current project: `portfoliobml`.
+2. Create a custom API token: one Account policy, your account only, **Cloudflare Pages: Edit**, 1-year expiry.
 3. GitHub repo → Settings → Secrets and variables → Actions:
-   - secrets `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
-   - variables `CLOUDFLARE_PROJECT` (the project name) and `SITE_URL` (the final domain, once chosen)
+   - secrets `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (the id in the dashboard URL)
+   - variables `CLOUDFLARE_PROJECT` (the project name) and `SITE_URL` (no trailing slash; currently
+     `https://portfoliobml.pages.dev` until a domain is chosen)
+4. Pages project → Metrics → **Web Analytics** → Enable. Cloudflare injects the beacon on each deploy; no code.
 
-Every push to `main` then builds, tests, runs Lighthouse (mobile; performance >= 0.9, accessibility >= 0.95)
-and deploys `dist/`. The deploy step is skipped until `CLOUDFLARE_PROJECT` is set.
+Every push to `main` then builds, tests, runs Lighthouse (mobile; performance >= 0.9, accessibility >= 0.95),
+deploys `dist/` and checks that the live `/` has the right canonical URL and `/cv.pdf` is a PDF. Deploy and
+check are skipped until `CLOUDFLARE_PROJECT` and `SITE_URL` are set.
