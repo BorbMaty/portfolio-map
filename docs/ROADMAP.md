@@ -25,11 +25,12 @@ Status: `[x]` done · `[ ]` open.
   *Gate:* a test fails on any `TODO(` in the production build.
   Open: the Tractor VR gameplay video (image hero until it is on YouTube); AgriCulture CNN and Solar System are drafts
   (decided 2026-11-28; Solar System has no public repo).
-- [ ] **1.5 Go live** — Cloudflare Pages project, secrets/variables, `SITE_URL`, first deploy, link previews
+- [x] **1.5 Go live** (PR #14, #15) — Cloudflare Pages project, secrets/variables, `SITE_URL`, first deploy, link previews
   checked, Cloudflare Web Analytics.
   *Gate:* `https://portfoliobml.pages.dev` serves the site and `/cv.pdf` (checked by CI after every deploy).
   **Phase 1 done.** Decided 2026-11-28: launch on `pages.dev`; a name domain comes in 3.4
   (`printermonitor.app` rejected: it does not read as a CV address).
+  Deploy uses `pnpm dlx wrangler` (wrangler-action fails under pnpm 12). Open: `/` and `/cv/` have no `og:image` (3.3).
 
 ## Phase 2 — the map
 
@@ -51,7 +52,7 @@ Status: `[x]` done · `[ ]` open.
 
 - [ ] **3.1** Final terrain render + night render.
 - [ ] **3.2** Fog of war.
-- [ ] **3.3** Per-project OG images, sitemap, SEO.
+- [ ] **3.3** Per-project and landing/CV OG images, sitemap, SEO.
 - [ ] **3.4** Domain, final Lighthouse and content check → **launch**.
 
 ## Later
