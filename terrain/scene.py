@@ -1,10 +1,11 @@
-"""Build the terrain scene from tiles-src/heightmap.png and render a draft.
+"""Build the terrain scene from tiles-src/heightmap.png (gen_island.py) and render it.
 
 Run inside Blender (needs bpy, so not part of the uv project):
   blender -b -P terrain/scene.py -- [--exaggeration 2.5] [--size 1024] [--tilt 25] [--out draft.png] [--save]
 
 Scale: 1 Blender unit = 1 km, so the camera and light numbers read as real distances.
-Output: tiles-src/draft.png or --out name (and tiles-src/terrain.blend with --save).
+Output: tiles-src/draft.png or --out name, tiles-src/landmarks.json (landmark positions on the render, the
+format of src/map/regions.ts), and tiles-src/terrain.blend with --save.
 """
 
 from __future__ import annotations
@@ -17,6 +18,10 @@ from pathlib import Path
 
 import bpy
 from mathutils import Vector
+
+# Blender's Python does not see the uv project; framing.py is plain Python next to this file.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from framing import frame_size, project
 
 SRC = Path(__file__).resolve().parents[1] / "tiles-src"
 
@@ -44,7 +49,7 @@ def build_terrain(meta: dict, exaggeration: float) -> tuple[bpy.types.Object, fl
     """Make a displaced grid matching the heightmap's ground size.
 
     Args:
-        meta: contents of heightmap.json (from fetch_dem.py).
+        meta: contents of heightmap.json (from gen_island.py).
         exaggeration: vertical scale factor (1 = true relief).
 
     Returns:
@@ -54,8 +59,8 @@ def build_terrain(meta: dict, exaggeration: float) -> tuple[bpy.types.Object, fl
     height_km = meta["size_m"]["height"] / 1000
     relief_km = (meta["elevation_m"]["max"] - meta["elevation_m"]["min"]) / 1000 * exaggeration
 
-    # Half the heightmap resolution is plenty for a draft render (~580k vertices for the default bbox);
-    # the cap keeps a larger bbox from building a mesh of millions of vertices.
+    # Half the heightmap resolution is plenty for a draft render (~480k vertices at 1600 x 1200 px);
+    # the cap keeps a larger heightmap from building a mesh of millions of vertices.
     step = max(2, math.ceil(max(meta["pixels"]["width"], meta["pixels"]["height"]) / MAX_GRID_CELLS))
     cols, rows = meta["pixels"]["width"] // step, meta["pixels"]["height"] // step
     bpy.ops.mesh.primitive_grid_add(x_subdivisions=cols, y_subdivisions=rows, size=1, calc_uvs=True)
@@ -79,16 +84,21 @@ def build_terrain(meta: dict, exaggeration: float) -> tuple[bpy.types.Object, fl
     return terrain, relief_km
 
 
-def terrain_material(relief_km: float) -> bpy.types.Material:
-    """Draft procedural material: colour by height, rock on steep slopes.
+def terrain_material(relief_km: float, sea_km: float) -> bpy.types.Material:
+    """Draft procedural material: sea coloured by depth, land by height, rock on steep land.
 
-    Heights are normalised to 0-1 over the relief; slope comes from the surface normal's
-    Z component (1 = flat, 0 = vertical). Final textures (Poly Haven) come in phase 3.1.
+    There is no separate water surface: the sea floor is smooth (gen_island.py), so colouring
+    everything below sea level as water reads as calm sea, and the river channel fills too.
+    Land heights are normalised 0-1 from sea level to the top; slope comes from the surface
+    normal's Z component (1 = flat, 0 = vertical). Final textures come in phase 3.1.
+
+    Args:
+        relief_km: displaced height range in km (top of the terrain).
+        sea_km: displaced height of sea level in km.
     """
     mat = bpy.data.materials.new("TerrainDraft")
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     bsdf = nodes["Principled BSDF"]
-    bsdf.inputs["Roughness"].default_value = 0.9
 
     geo = nodes.new("ShaderNodeNewGeometry")
     pos = nodes.new("ShaderNodeSeparateXYZ")
@@ -96,32 +106,74 @@ def terrain_material(relief_km: float) -> bpy.types.Material:
     links.new(geo.outputs["Position"], pos.inputs[0])
     links.new(geo.outputs["Normal"], nrm.inputs[0])
 
+    def ramp(stops: list[tuple[float, tuple[float, float, float]]]) -> bpy.types.ShaderNode:
+        """Colour ramp node with the given (position, RGB) stops."""
+        node = nodes.new("ShaderNodeValToRGB")
+        els = node.color_ramp.elements
+        els[0].position, els[0].color = stops[0][0], (*stops[0][1], 1)
+        els[1].position, els[1].color = stops[-1][0], (*stops[-1][1], 1)
+        for p, c in stops[1:-1]:
+            els.new(p).color = (*c, 1)
+        return node
+
+    # Land: beach sand at the waterline -> meadows -> forest -> bare tops -> pale peaks.
     height = nodes.new("ShaderNodeMapRange")
+    height.inputs["From Min"].default_value = sea_km
     height.inputs["From Max"].default_value = relief_km
     links.new(pos.outputs["Z"], height.inputs["Value"])
-
-    # Valley meadows -> forest on the hills -> bare tops -> pale peaks.
-    band = nodes.new("ShaderNodeValToRGB")
-    els = band.color_ramp.elements
-    els[0].color = (0.30, 0.42, 0.16, 1)
-    els[1].position, els[1].color = 0.92, (0.80, 0.80, 0.78, 1)
-    for pos_, col in [(0.25, (0.12, 0.25, 0.08, 1)), (0.70, (0.30, 0.30, 0.20, 1))]:
-        e = els.new(pos_)
-        e.color = col
+    band = ramp(
+        [
+            (0.0, (0.76, 0.70, 0.50)),
+            (0.012, (0.30, 0.42, 0.16)),
+            (0.25, (0.12, 0.25, 0.08)),
+            (0.65, (0.30, 0.30, 0.20)),
+            (0.88, (0.80, 0.80, 0.78)),
+        ]
+    )
     links.new(height.outputs["Result"], band.inputs["Fac"])
+
+    # Sea: turquoise shallows -> deep blue, by depth below sea level.
+    depth = nodes.new("ShaderNodeMapRange")
+    depth.inputs["From Min"].default_value = sea_km
+    depth.inputs["From Max"].default_value = sea_km * 0.4  # 60 % of the way down to the deepest point
+    links.new(pos.outputs["Z"], depth.inputs["Value"])
+    water = ramp([(0.0, (0.22, 0.55, 0.58)), (0.35, (0.07, 0.25, 0.42)), (1.0, (0.03, 0.10, 0.26))])
+    links.new(depth.outputs["Result"], water.inputs["Fac"])
+
+    is_land = nodes.new("ShaderNodeMath")
+    is_land.operation = "GREATER_THAN"
+    is_land.inputs[1].default_value = sea_km
+    links.new(pos.outputs["Z"], is_land.inputs[0])
 
     # Steep where normal Z drops below ~0.8 (about 37 degrees), fully rock below 0.6.
     slope = nodes.new("ShaderNodeMapRange")
     slope.inputs["From Min"].default_value = 0.8
     slope.inputs["From Max"].default_value = 0.6
     links.new(nrm.outputs["Z"], slope.inputs["Value"])
+    rock_on_land = nodes.new("ShaderNodeMath")
+    rock_on_land.operation = "MULTIPLY"
+    links.new(slope.outputs["Result"], rock_on_land.inputs[0])
+    links.new(is_land.outputs[0], rock_on_land.inputs[1])
 
-    mix = nodes.new("ShaderNodeMix")
-    mix.data_type = "RGBA"
-    mix.inputs["B"].default_value = (0.35, 0.32, 0.28, 1)  # rock
-    links.new(slope.outputs["Result"], mix.inputs["Factor"])
-    links.new(band.outputs["Color"], mix.inputs["A"])
-    links.new(mix.outputs["Result"], bsdf.inputs["Base Color"])
+    rocky = nodes.new("ShaderNodeMix")
+    rocky.data_type = "RGBA"
+    rocky.inputs["B"].default_value = (0.35, 0.32, 0.28, 1)  # rock
+    links.new(rock_on_land.outputs[0], rocky.inputs["Factor"])
+    links.new(band.outputs["Color"], rocky.inputs["A"])
+
+    land_or_sea = nodes.new("ShaderNodeMix")
+    land_or_sea.data_type = "RGBA"
+    links.new(is_land.outputs[0], land_or_sea.inputs["Factor"])
+    links.new(water.outputs["Color"], land_or_sea.inputs["A"])
+    links.new(rocky.outputs["Result"], land_or_sea.inputs["B"])
+    links.new(land_or_sea.outputs["Result"], bsdf.inputs["Base Color"])
+
+    # Water is glossier than land, which gives the sea a soft sheen under the sun.
+    gloss = nodes.new("ShaderNodeMapRange")
+    gloss.inputs["To Min"].default_value = 0.35
+    gloss.inputs["To Max"].default_value = 0.9
+    links.new(is_land.outputs[0], gloss.inputs["Value"])
+    links.new(gloss.outputs["Result"], bsdf.inputs["Roughness"])
     return mat
 
 
@@ -149,14 +201,11 @@ def add_camera(meta: dict, relief_km: float, tilt_deg: float) -> tuple[float, fl
 
     cam_data = bpy.data.cameras.new("Camera")
     cam_data.type = "ORTHO"
-    # Seen at tilt t, the ground's north-south extent shrinks by cos(t), and a point at height z shifts up the
-    # image by z*sin(t). Around a target at relief/2, the north edge at z = 0 drops by relief/2*sin(t) and the
-    # south edge at z = relief rises by the same, so this inner extent is terrain at every height. 2 % inset
-    # covers the ragged mesh edge.
-    frame_w = width_km * 0.98
-    frame_h = (height_km * math.cos(t) - relief_km * math.sin(t)) * 0.98
-    if frame_h <= 0:
-        sys.exit(f"tilt {tilt_deg} deg / relief {relief_km:.1f} km too large: the relief hides the whole map")
+    # The frame that shows terrain at every edge (derivation in framing.py).
+    try:
+        frame_w, frame_h = frame_size(width_km, height_km, relief_km, tilt_deg)
+    except ValueError as e:
+        sys.exit(str(e))
     cam_data.ortho_scale = max(frame_w, frame_h)  # Blender fits ortho_scale to the longer render side
     cam_data.clip_end = 2 * dist_km
     cam = bpy.data.objects.new("Camera", cam_data)
@@ -195,17 +244,22 @@ def main() -> None:
     """Reset the scene, build terrain, camera and light, render to tiles-src/<out>.
 
     Raises:
-        SystemExit: if heightmap.json is missing (fetch_dem.py has not been run).
+        SystemExit: if heightmap.json is missing (gen_island.py has not been run).
     """
     args = parse_args()
     meta_path = SRC / "heightmap.json"
     if not meta_path.exists():
-        sys.exit(f"{meta_path} not found: run `uv run fetch_dem.py` in terrain/ first")
+        sys.exit(f"{meta_path} not found: run `uv run --project terrain terrain/gen_island.py` first")
     meta = json.loads(meta_path.read_text())
+    lo_m = meta["elevation_m"]["min"]
+
+    def displaced_km(elevation_m: float) -> float:
+        """Height of an elevation in the scene: the lowest point sits at z = 0."""
+        return (elevation_m - lo_m) / 1000 * args.exaggeration
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
     terrain, relief_km = build_terrain(meta, args.exaggeration)
-    terrain.data.materials.append(terrain_material(relief_km))
+    terrain.data.materials.append(terrain_material(relief_km, displaced_km(meta["sea_level_m"])))
     frame_w, frame_h = add_camera(meta, relief_km, args.tilt)
     add_light()
 
@@ -217,6 +271,16 @@ def main() -> None:
     scene.render.image_settings.file_format = "PNG"
     scene.render.filepath = str(SRC / args.out)
     bpy.ops.render.render(write_still=True)
+
+    # Where each landmark lands on this render (tilt shifts high ground up the image), rounded to 0.1 % of the
+    # image: copy these into src/map/regions.ts.
+    width_km, height_km = meta["size_m"]["width"] / 1000, meta["size_m"]["height"] / 1000
+    spots = {}
+    for name, lm in meta["landmarks"].items():
+        u, v = project(lm["x"], lm["y"], displaced_km(lm["elevation_m"]), width_km, height_km, relief_km, args.tilt)
+        spots[name] = {"x": round(u, 3), "y": round(v, 3)}
+    (SRC / "landmarks.json").write_text(json.dumps(spots, indent=2))
+
     if args.save:
         bpy.ops.wm.save_as_mainfile(filepath=str(SRC / "terrain.blend"))
 

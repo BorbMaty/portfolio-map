@@ -38,8 +38,8 @@ Teamwork is missing now that the hackathon is out: mention team work on the CV p
 
 ## Visual concept
 
-The realm is a stylised Transylvania with invented fantasy names: rolling hills, a mountain arc, a river
-valley. It's personal (the tractor sim is set near Reghin), original, and avoids any Warcraft or Blizzard
+The realm is a fictional coast inspired by Transylvania, with invented fantasy names: rolling hills, a
+mountain arc, a river valley that runs down to a bay on the sea. It's personal (the tractor sim is set near Reghin), original, and avoids any Warcraft or Blizzard
 lookalike.
 
 **Geography (rough placement):**
@@ -50,14 +50,18 @@ lookalike.
 - River runs south to the **Harbor**; **Capital** sits at the crossroads in the middle; **Village** on a side road.
 - Fog of war over unexplored edges; it clears as regions are visited (and leaves room for future projects).
 
-**Art direction: realistic terrain (decided 2026-11-27).** The map is a realistic, rendered landscape seen
-from above at a slight tilt, like a satellite view of a valley. The fantasy comes from the names, the label
-lettering, the landmarks and the fog, not the drawing style.
+**Art direction: a fictional coast, rendered realistically (decided 2026-11-28, replaces the real-terrain
+plan of 2026-11-27).** The map is a rendered landscape seen from above at a slight tilt: a continent's coast,
+with land running off the north and east edges and open sea to the west and south. The landform is invented,
+not real elevation data, so every landmark gets the ground its story needs (a peak for the Observatory, a bay
+for the Harbor). The fantasy comes from the landform, the names, the label lettering, the landmarks and the
+fog; the rendering stays realistic.
 
 **Terrain pipeline (reuses the tractor-sim Blender skills):**
 
-1. Real elevation data for the Reghin / Mezőség / Görgényi area (Copernicus GLO-30 DEM, free) → cropped and
-   exaggerated in Blender. Use a real area, but the realm stays fictional.
+1. Generated heightmap (`terrain/gen_island.py`): noise for natural detail, plus shaping that guarantees each
+   landmark's ground (mountain backbone, flat plain, bay, a river forking at the Capital). Fixed seed, so it
+   rebuilds identically. (The first draft used the Copernicus GLO-30 DEM of the Reghin area; dropped.)
 2. Procedural materials: grass, fields, forest by slope and height, rivers, snow on the peaks; Poly Haven
    textures (CC0), as in the sim.
 3. Landmarks modelled by script: reuse own farm assets (barn, shed, Székely gate) for the Homestead; new ones
