@@ -53,10 +53,11 @@ Status: `[x]` done · `[ ]` open.
   `pnpm tiles` before the build, so the deploy has them. CI also runs the `terrain/` tests from here on.
   *Gate:* first map view < 800 KB; landmarks stay pinned while zooming. Exclude map tiles from the
   landing `resource-summary` budget in `lighthouserc.json` (it counts everything since 1.1).
-- [ ] **2.4 Fly-to + panel** — landmark click animates the view and opens `ProjectPanel`; `/projects/<slug>`
-  opens the map with that panel. No GSAP: OpenSeadragon animates the viewport, CSS animates the panel.
-  *Gate:* every project URL opens the map with the right panel.
-- [ ] **2.5 Keyboard + motion** — Tab between landmarks, Enter opens, Esc closes; reduced motion disables
+- [x] **2.4 Fly-to** (PR #27, #28) — landmark click animates the view onto it, then opens the project page with a
+  CSS cross-document view transition (no flash, no JS). No GSAP: OpenSeadragon animates the viewport.
+  Changed 2026-11-28: project pages show only the project, no map (the map-plus-panel layout of #27 was dropped).
+  *Gate:* every project URL shows its project; a landmark click flies, then opens it (both tested).
+- [ ] **2.5 Keyboard + motion** — Tab between landmarks, Enter opens; reduced motion disables
   animation. *Gate:* keyboard-only test passes.
 - [ ] **2.6 Mobile journey path** — vertical path layout below 768 px.
   *Gate:* works on a real phone. **Phase 2 done.**

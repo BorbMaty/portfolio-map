@@ -32,4 +32,4 @@ Full plan: `docs/PLAN.md`. Phases and gates: `docs/ROADMAP.md` (one PR per phase
 
 ## Phase 2 hooks
 - `src/map/regions.ts`: normalised 0–1 coordinates on the final terrain image (deep-zoom, OpenSeadragon).
-- `src/components/ProjectPanel.astro`: the project panel markup, reused by the map's scroll panel.
+- `src/components/ProjectPanel.astro`: the project panel markup of `/projects/<slug>` (no map on project pages).
