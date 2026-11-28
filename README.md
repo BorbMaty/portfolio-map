@@ -34,6 +34,20 @@ pnpm test                               # smoke tests against the production bui
 CV facts live in `src/content/cv.yaml`. Never commit licensed assets (TurboSquid models, Meta controller
 models, built APKs/EXEs).
 
+## Rebuild the terrain (map phase 2)
+
+Real elevation (Copernicus GLO-30 DEM, Reghin / Gorgenyi area) rendered in Blender. Everything generated goes
+to `tiles-src/`, which is not versioned. Needs [uv](https://docs.astral.sh/uv/) and Blender 5.2.
+
+```sh
+cd terrain && uv run fetch_dem.py                  # download DEM tiles (~85 MB once), write heightmap.png/.json
+cd .. && blender -b -P terrain/scene.py            # render tiles-src/draft.png (~10 s)
+blender -b -P terrain/scene.py -- --exaggeration 3 --tilt 30 --save   # tweak; --save keeps terrain.blend
+cd terrain && uv run pytest                        # tests for the crop maths
+```
+
+`fetch_dem.py --bbox S W N E` picks another area (degrees).
+
 ## Deployment (Cloudflare Pages)
 
 The site is built and deployed by GitHub Actions (`.github/workflows/ci.yml`), not by Cloudflare's own build:

@@ -29,3 +29,8 @@ tiles-src/
 
 # The plan PDF is the original export; docs/PLAN.md is the versioned copy
 docs/*.pdf
+
+# Python (terrain/ uv project)
+.venv/
+__pycache__/
+.pytest_cache/
