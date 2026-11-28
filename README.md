@@ -49,8 +49,13 @@ cd terrain && uv run pytest                        # tests for the crop and tili
 ```
 
 `fetch_dem.py --bbox S W N E` picks another area (degrees). `pnpm tiles --quality 70` makes smaller tiles.
-The tiles are generated and not versioned; from phase 2.3, CI builds them from a render stored as a GitHub
-Release asset.
+The tiles are generated and not versioned. CI downloads the render from the GitHub Release `terrain-src-1` and
+runs `pnpm tiles` before the build; to use it locally instead of rendering:
+`gh release download terrain-src-1 --pattern render.png --dir tiles-src && pnpm tiles`.
+
+The camera framing (tilt, exaggeration, bbox) is frozen: landmark positions in `src/map/regions.ts` are fractions of
+the render, so a new render may only change its size. A new render goes in a new release (`terrain-src-2`) and the
+`TERRAIN_RELEASE` value in `.github/workflows/ci.yml`.
 
 ## Deployment (Cloudflare Pages)
 

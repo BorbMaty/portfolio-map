@@ -33,7 +33,7 @@ def parse_args() -> argparse.Namespace:
     argv = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     p = argparse.ArgumentParser(prog="scene.py")
     p.add_argument("--exaggeration", type=float, default=2.5, help="vertical scale factor")
-    p.add_argument("--size", type=int, default=1024, help="render width and height in px")
+    p.add_argument("--size", type=int, default=1024, help="longer side of the render in px")
     p.add_argument("--tilt", type=float, default=25.0, help="camera angle from straight down, degrees")
     p.add_argument("--out", default="draft.png", help="output file name inside tiles-src/")
     p.add_argument("--save", action="store_true", help="also save terrain.blend for manual tweaking")
@@ -125,13 +125,20 @@ def terrain_material(relief_km: float) -> bpy.types.Material:
     return mat
 
 
-def add_camera(meta: dict, relief_km: float, tilt_deg: float) -> None:
-    """Orthographic camera south of centre, tilted north, framing the whole map.
+def add_camera(meta: dict, relief_km: float, tilt_deg: float) -> tuple[float, float]:
+    """Orthographic camera south of centre, tilted north, framing the terrain edge to edge.
+
+    The frame sits just inside the terrain, so no sky shows at any edge. Landmark positions are
+    stored as fractions of this frame (src/map/regions.ts), so changing tilt or exaggeration
+    moves every landmark: only the render size may change after they are placed.
 
     Args:
         meta: contents of heightmap.json (ground size in metres).
         relief_km: displaced relief height in km (Blender units).
         tilt_deg: camera angle from straight down, degrees.
+
+    Returns:
+        (width_km, height_km) of the framed area, for the render aspect ratio.
     """
     width_km = meta["size_m"]["width"] / 1000
     height_km = meta["size_m"]["height"] / 1000
@@ -142,14 +149,22 @@ def add_camera(meta: dict, relief_km: float, tilt_deg: float) -> None:
 
     cam_data = bpy.data.cameras.new("Camera")
     cam_data.type = "ORTHO"
-    # Tilt shortens the north-south extent by cos(tilt); fit whichever side is larger, plus 2 % margin.
-    cam_data.ortho_scale = max(width_km, height_km * math.cos(t) + relief_km * math.sin(t)) * 1.02
+    # Seen at tilt t, the ground's north-south extent shrinks by cos(t), and a point at height z shifts up the
+    # image by z*sin(t). Around a target at relief/2, the north edge at z = 0 drops by relief/2*sin(t) and the
+    # south edge at z = relief rises by the same, so this inner extent is terrain at every height. 2 % inset
+    # covers the ragged mesh edge.
+    frame_w = width_km * 0.98
+    frame_h = (height_km * math.cos(t) - relief_km * math.sin(t)) * 0.98
+    if frame_h <= 0:
+        sys.exit(f"tilt {tilt_deg} deg / relief {relief_km:.1f} km too large: the relief hides the whole map")
+    cam_data.ortho_scale = max(frame_w, frame_h)  # Blender fits ortho_scale to the longer render side
     cam_data.clip_end = 2 * dist_km
     cam = bpy.data.objects.new("Camera", cam_data)
     bpy.context.collection.objects.link(cam)
     cam.location = target + Vector((0, -math.sin(t), math.cos(t))) * dist_km
     cam.rotation_euler = (target - cam.location).to_track_quat("-Z", "Y").to_euler()
     bpy.context.scene.camera = cam
+    return frame_w, frame_h
 
 
 def add_light() -> None:
@@ -177,7 +192,7 @@ def add_light() -> None:
 
 
 def main() -> None:
-    """Reset the scene, build terrain, camera and light, render draft.png.
+    """Reset the scene, build terrain, camera and light, render to tiles-src/<out>.
 
     Raises:
         SystemExit: if heightmap.json is missing (fetch_dem.py has not been run).
@@ -191,12 +206,14 @@ def main() -> None:
     bpy.ops.wm.read_factory_settings(use_empty=True)
     terrain, relief_km = build_terrain(meta, args.exaggeration)
     terrain.data.materials.append(terrain_material(relief_km))
-    add_camera(meta, relief_km, args.tilt)
+    frame_w, frame_h = add_camera(meta, relief_km, args.tilt)
     add_light()
 
     scene = bpy.context.scene
     scene.render.engine = "BLENDER_EEVEE"
-    scene.render.resolution_x = scene.render.resolution_y = args.size
+    # --size is the longer side; the other follows the framed area so the image has no empty bands.
+    scale = args.size / max(frame_w, frame_h)
+    scene.render.resolution_x, scene.render.resolution_y = round(frame_w * scale), round(frame_h * scale)
     scene.render.image_settings.file_format = "PNG"
     scene.render.filepath = str(SRC / args.out)
     bpy.ops.render.render(write_still=True)

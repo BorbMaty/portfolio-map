@@ -28,6 +28,7 @@ Thumbs.db
 tiles-src/
 public/map/terrain.dzi
 public/map/terrain_files/
+public/map/preview.webp
 
 # The plan PDF is the original export; docs/PLAN.md is the versioned copy
 docs/*.pdf

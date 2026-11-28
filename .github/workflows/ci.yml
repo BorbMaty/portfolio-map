@@ -21,6 +21,8 @@ jobs:
     timeout-minutes: 15
     env:
       SITE_URL: ${{ vars.SITE_URL }}
+      # GitHub Release holding the terrain render the map tiles are cut from (ROADMAP 2.3: tiles are not in git).
+      TERRAIN_RELEASE: terrain-src-1
     steps:
       - uses: actions/checkout@v4
 
@@ -32,6 +34,19 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      # terrain/ is a uv project (Python): its tests run here, and it cuts the map tiles the build reads.
+      # The default cache keys on **/uv.lock. Pinned to a commit: setup-uv publishes no floating major tags (no @v10).
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+      - name: Terrain tests
+        working-directory: terrain
+        run: uv run pytest -q
+      # contents: read is enough to download a release asset of this repo.
+      - name: Download the terrain render
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "$TERRAIN_RELEASE" --pattern render.png --dir tiles-src
+      - run: pnpm tiles
 
       # Chromium is needed by both the PDF script and the smoke tests; --with-deps installs its system libraries.
       - run: pnpm exec playwright install --with-deps chromium

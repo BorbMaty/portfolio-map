@@ -52,5 +52,13 @@ def test_write_tiles_layout(tmp_path):
     assert Image.open(top / "1_0.webp").size == (47, 200)  # x 253..300
     assert (files / "0" / "0_0.webp").exists()
     assert count == len(list(files.rglob("*.webp")))
+    assert Image.open(tmp_path / "out" / "preview.webp").size == (300, 200)  # already under PREVIEW_MAX_PX
     dzi = (tmp_path / "out" / "terrain.dzi").read_text(encoding="utf-8")
     assert 'Width="300"' in dzi and 'Height="200"' in dzi and 'Format="webp"' in dzi
+
+
+def test_preview_is_first_level_that_fits(tmp_path):
+    src = tmp_path / "render.png"
+    Image.new("RGB", (2100, 1000)).save(src)
+    write_tiles(src, tmp_path, quality=50)
+    assert Image.open(tmp_path / "preview.webp").size == (525, 250)  # 2100 -> 1050 (too big) -> 525
